@@ -68,10 +68,21 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| WRITE TEXT HERE |%%
 	\section{Einleitung}
-	Kontext: Data race, HB-relation, Vector clocks, Epochs
+	\begin{description}
+		\item[data race] concurrent programs prone to data races, due to highly nondeterministic nature. 2 conflicting events next to each other in trace
+		\item[conflicting event] 2 read/write events, at least one event is write event
+		\item[dynamic data race prediction] predict trace orderings that exhibit data races
+		\item[exhaustive predictive methods] identify as many orderings as possible
+		\item[efficient predictive methods] \(O(n)\) runtime, compromise completeness and soundness
+		\item[HB relation] events can be ordered by happens-before relation and if they can't that means they can be ordered in a way that they are next to each other in the trace $\rightarrow$ data race
+		\item[vector clocks] used to represent happens-before relation, if incomparable then data race
+		\item[epochs] vector clocks need \(O(n)\) time and space, instead epochs can be used which consist of time stamp j and thread id k $\rightarrow$ j\#k
+	\end{description}
 	
 	\section{FastTrack Algorithmus TSan}
-	FastTrack optimierte semi-adaptive version von epochs erläutern, Beispieltraces zeigen, die Funktionsweise von FastTrack zeigt, false alarms \cite{cormac} \cite{sulzmann}
+	\begin{itemize}
+		\item FastTrack uses an optimized semi-adaptive version of epochs
+	\end{itemize} \cite{cormac} \cite{sulzmann}
 	
 	\section{TSan Tool Beispiele Anwendung, Code}
 	
