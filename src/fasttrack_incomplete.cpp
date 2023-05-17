@@ -1,8 +1,7 @@
 //
-// Created by unknown on 11.05.23.
-//
+// fasttrack_incomplete to show incompleteness of TSan v2, as shown on slides
 
-#include "example.h"
+#include "fasttrack_incomplete.h"
 #include <pthread.h>
 #include <stdio.h>
 
@@ -12,12 +11,16 @@
 int Global;
 
 void *Thread1(void *x) {
+    // w(x)1
     Global++;
     return NULL;
 }
 
 void *Thread2(void *x) {
+    // w(x)2
     Global--;
+    // w(x)3
+    Global++;
     return NULL;
 }
 
