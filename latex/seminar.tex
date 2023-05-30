@@ -4,7 +4,7 @@
 %%| !!! HsKa_new.png WAS CREATED BY USAGE OF IMAGERY FROM: https://www.h-ka.de/intern       !!! |%% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%| SET DOCUMENT PARAMTER HERE |%%
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
 
 %%| INCLUDE PACKAGES HERE |%%
 \usepackage[utf8]{inputenc}
@@ -14,7 +14,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage[autostyle=true,german=quotes]{csquotes}
-\usepackage[backend=biber, style=ieee]{biblatex}
+\usepackage[backend=bibtex, style=ieee]{biblatex}
 \usepackage{hyperref}
 \usepackage{setspace}
 \usepackage{microtype}
@@ -36,7 +36,7 @@
 \setstretch{1.25}                                                                   % SET GENERAL LINE SPACING HERE
 
 %%| SET OTHER PARAMETERS HERE |%%
-\addbibresource{Document/Bibliography/ref.bib}
+\addbibresource{document/bibliography/ref.bib}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%| TITLE PAGE |%%
@@ -44,8 +44,8 @@
 	\begin{titlepage}
 		\begin{center}
 			\includegraphics[width=0.55\textwidth]{images/hka-logo.png}\\[16ex]
-			\huge{\textbf{Dynamische Programmanalysen für nebenläufige Programme - Data Race Prediction mit TSan V2}}\\[8ex]
-			\LARGE{{Seminararbeit}}\\[14ex]
+			\LARGE{\textbf{Dynamische Programmanalysen für nebenläufige Programme - Data Race Prediction mit TSan V2}}\\[8ex]
+			\Large{{Seminararbeit}}\\[14ex]
 			\normalsize{}
 			\begin{tabular}{lll}
 				Student:            & \quad Frank Ling                                  & \\[2ex]
@@ -68,6 +68,8 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| WRITE TEXT HERE |%%
 	\section{Einleitung}
+	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. With concurrent programs data races are 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann}
+	
 	\begin{description}
 		\item[data race] concurrent programs prone to data races, due to highly nondeterministic nature. 2 conflicting events next to each other in trace
 		\item[conflicting event] 2 read/write events, at least one event is write event
@@ -78,16 +80,24 @@
 		\item[vector clocks] used to represent happens-before relation, if incomparable then data race
 		\item[epochs] vector clocks need \(O(n)\) time and space, instead epochs can be used which consist of time stamp j and thread id k $\rightarrow$ j\#k
 	\end{description}
+
+	\section{Motivation und Beispiele}
 	
-	\section{FastTrack Algorithmus TSan}
+	\section{Grundlagen}
+		\begin{itemize}
+			\item was genau ist ein data race
+			\item wie k\"onnen data races dynamisch erkannt werden?
+			\item happens-before Methode
+		\end{itemize}
+	
+	\section{FastTrack + TSan}
 	\begin{itemize}
+		\item Effiziente Umsetzung der happens-before methode
 		\item FastTrack uses an optimized semi-adaptive version of epochs
 	\end{itemize} \cite{cormac} \cite{sulzmann}
 	
-	\section{TSan Tool Beispiele Anwendung, Code}
 	
 	\section{Fazit}
-	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| BIBLIOGRAPHY |%%                 
 	\newpage                                          
