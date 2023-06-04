@@ -9,15 +9,21 @@
 %%| INCLUDE PACKAGES HERE |%%
 \usepackage[utf8]{inputenc}
 \usepackage[paper=a4paper,left=25mm,right=25mm,top=25mm,bottom=25mm]{geometry}
-\usepackage[english, ngerman]{babel}
+%% enable for german
+%% \usepackage[english, ngerman]{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
+\graphicspath{ {./images/} }
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage[autostyle=true,german=quotes]{csquotes}
+\usepackage[autostyle=true]{csquotes}
 \usepackage[backend=bibtex, style=ieee]{biblatex}
 \usepackage{hyperref}
 \usepackage{setspace}
 \usepackage{microtype}
+
+\usepackage{tikz}
+\usetikzlibrary{tikzmark}
 
 %%| SET PACKAGE PARAMETERS HERE |%%
 \hypersetup{                                                                        
@@ -67,45 +73,75 @@
 	\pagenumbering{arabic}
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| WRITE TEXT HERE |%%
-	\section{Einleitung}
-	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. With concurrent programs data races are 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann}
+	\section{Introduction}
+	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This seminar work shows the motivation and background for the data prediction tool ThreadSanitizer (TSan) V2, which differentiates itself from the first version by utilizing happens-before methods instead of the lockset method. Afterwards the concepts of the FastTrack \cite{cormac} algorithm will be shown as TSan uses a slightly modified version of the FastTrack algorithm. Examples showing the limits of FastTrack and TSan follow, as they are both incomplete and thus do not find every data race. In the following the same notation as in \cite{sulzmann} will be used for traces and events.
 	
-	\begin{description}
-		\item[data race] concurrent programs prone to data races, due to highly nondeterministic nature. 2 conflicting events next to each other in trace
-		\item[conflicting event] 2 read/write events, at least one event is write event
-		\item[dynamic data race prediction] predict trace orderings that exhibit data races
-		\item[exhaustive predictive methods] identify as many orderings as possible
-		\item[efficient predictive methods] \(O(n)\) runtime, compromise completeness and soundness
-		\item[HB relation] events can be ordered by happens-before relation and if they can't that means they can be ordered in a way that they are next to each other in the trace $\rightarrow$ data race
-		\item[vector clocks] used to represent happens-before relation, if incomparable then data race
-		\item[epochs] vector clocks need \(O(n)\) time and space, instead epochs can be used which consist of time stamp j and thread id k $\rightarrow$ j\#k
-	\end{description}
+%	\begin{description}
+%		\item[data race] concurrent programs prone to data races, due to highly nondeterministic nature. 2 conflicting events next to each other in trace
+%		\item[conflicting event] 2 read/write events, at least one event is write event
+%		\item[dynamic data race prediction] predict trace orderings that exhibit data races
+%		\item[exhaustive predictive methods] identify as many orderings as possible
+%		\item[efficient predictive methods] \(O(n)\) runtime, compromise completeness and soundness
+%		\item[HB relation] events can be ordered by happens-before relation and if they can't that means they can be ordered in a way that they are next to each other in the trace $\rightarrow$ data race
+%		\item[vector clocks] used to represent happens-before relation, if incomparable then data race
+%		\item[epochs] vector clocks need \(O(n)\) time and space, instead epochs can be used which consist of time stamp j and thread id k $\rightarrow$ j\#k
+%	\end{description}
 
-	\section{Motivation und Beispiele}
+	\section{Motivation and Examples}
+	As stated in the introduction concurrent programs are commonly used and are inherently prone to data races. The following example shows a program written in the programming language C++, which exhibits a data race:
+	\begin{figure}[h]
+		\centering
+		\includegraphics{example-image}
+		\caption{PLACEHOLDER: show example in C showing data race, see slide \#2}
+		\label{data-race-ex}
+	\end{figure}
 	
-	\section{Grundlagen}
-		\begin{itemize}
-			\item was genau ist ein data race
-			\item wie k\"onnen data races dynamisch erkannt werden?
-			\item happens-before Methode
-		\end{itemize}
+	\section{Background}
+		\subsection{Data Race}
+		Sulzmann and Stadtm\"uller \cite[p. 1]{sulzmann} define data races as follows: 'A data race arises if two unprotected, conflicting read/write operations from different threads happen at the same time.' Further they state that a data race can be described as: '[...] two read/write events on the same variable where at least one of them is a write event and both events result from different threads.'
+		\subsection{Happens-Before Relation}
+		The example shown in figure \ref{data-race-ex} can be represented by the following trace:
+		\begin{table}[h]
+			\begin{center}
+				\begin{tabular}{ c c c}
+					& 1\# & 2\# \\
+					\hline
+					1. & w(x) & \\
+					2. & acq(y) & \\
+					3. & rel(y) & \\
+					4. & & acq(y) \\
+					5. & & w(x) \\
+					6. & & rel(y) \\
+				\end{tabular}
+				\caption{Trace 1}
+			\end{center}
+		\end{table}
+		
+		\subsection{Vector-Clock}
+		\subsection{Epoch}
+%		\begin{itemize}
+%			\item was genau ist ein data race
+%			\item wie k\"onnen data races dynamisch erkannt werden?
+%			\item happens-before Methode \cite[p. 4]{FAVA2020102473}
+%			
+%		\end{itemize}
 	
 	\section{FastTrack + TSan}
-	\begin{itemize}
-		\item Effiziente Umsetzung der happens-before methode
-		\item FastTrack uses an optimized semi-adaptive version of epochs
-	\end{itemize} \cite{cormac} \cite{sulzmann}
+%	\begin{itemize}
+%		\item Effiziente Umsetzung der happens-before methode
+%		\item FastTrack uses an optimized semi-adaptive version of epochs
+%	\end{itemize}
 	
 	
-	\section{Fazit}
+	\section{Conclusion}
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| BIBLIOGRAPHY |%%                 
 	\newpage                                          
-	\printbibliography[heading= bibintoc, title={Literaturverzeichnis}]
+	\printbibliography[heading= bibintoc, title={List of Literature}]
 	\newpage
 	\listoffigures
-	\addcontentsline{toc}{section}{Abbildungsverzeichnis}
+	\addcontentsline{toc}{section}{List of Figures}
 	\newpage
 	\listoftables
-	\addcontentsline{toc}{section}{Tabellenverzeichnis}
+	\addcontentsline{toc}{section}{List of Tables}
 \end{document}
