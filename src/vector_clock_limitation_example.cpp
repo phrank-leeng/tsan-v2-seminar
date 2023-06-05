@@ -31,7 +31,7 @@ void *Thread257(void *x) {
     return NULL;
 }
 
-int main() {
+void run() {
     pthread_t t[threadCount];
     for (int i = 0; i < threadCount; i++) {
         if (i == 0) {

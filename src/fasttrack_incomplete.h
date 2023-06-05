@@ -7,7 +7,8 @@
 
 
 class fasttrack_incomplete {
-
+public:
+    static void run();
 };
 
 

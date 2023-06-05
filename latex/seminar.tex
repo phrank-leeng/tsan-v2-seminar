@@ -18,20 +18,24 @@
 \usepackage{amssymb}
 \usepackage[autostyle=true]{csquotes}
 \usepackage[backend=bibtex, style=ieee]{biblatex}
+\AtBeginEnvironment{quote}{\small}
 \usepackage{hyperref}
 \usepackage{setspace}
 \usepackage{microtype}
+\usepackage{listings}
+\lstset{inputpath=./listings/}
+\renewcommand\lstlistlistingname{List of Listings}
 
 \usepackage{tikz}
 \usetikzlibrary{tikzmark}
 
 %%| SET PACKAGE PARAMETERS HERE |%%
-\hypersetup{                                                                        
+\hypersetup{                                                           
 	colorlinks,
-	citecolor   = black,
-	filecolor   = black,
-	linkcolor   = black,
-	urlcolor    = black,
+	citecolor   = red,
+	filecolor   = red,
+	linkcolor   = red,
+	urlcolor    = red,
 	pdftitle    = {Seminararbeit},                                               % SET FILE PARAMETERS HERE (SHOWN IN PDF PROPERTIES)
 	pdfsubject  = {Dynamische Programmanalysen für nebenläufige Programme - Data Race Prediction mit TSan V2},                                       % ...
 	pdfauthor   = {Frank Ling},                                                 % ...
@@ -40,6 +44,39 @@
 	pdfproducer = {LaTeX with hyperref}
 }
 \setstretch{1.25}                                                                   % SET GENERAL LINE SPACING HERE
+
+%\lstdefinestyle{customc}{
+%	belowcaptionskip=1\baselineskip,
+%	breaklines=true,
+%	frame=L,
+%	xleftmargin=\parindent,
+%	language=C,
+%	showstringspaces=false,
+%	basicstyle=\footnotesize\ttfamily,
+%	keywordstyle=\bfseries\color{green!40!black},
+%	commentstyle=\itshape\color{purple!40!black},
+%	identifierstyle=\color{blue},
+%	stringstyle=\color{orange},
+%}
+\lstdefinestyle{customc}{
+	belowcaptionskip=1\baselineskip,
+	breaklines=true,
+	numbers=left,
+	columns=flexible,
+	xleftmargin=2em,
+	xrightmargin=1em,
+	firstnumber=1,
+	numberfirstline,
+	numberstyle=\tiny\sffamily,
+	numbersep=6pt,
+	basicstyle=\footnotesize\ttfamily,
+	keywordstyle=\bfseries\color{green!40!black},
+	commentstyle=\itshape\color{purple!40!black},
+	identifierstyle=\color{blue},
+	backgroundcolor=\color{gray!10!white},
+}
+\lstset{style=customc}
+\lstset{captionpos=b}
 
 %%| SET OTHER PARAMETERS HERE |%%
 \addbibresource{document/bibliography/ref.bib}
@@ -67,8 +104,9 @@
 	\newpage
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| TABLE OF CONTENTS |%%
-	\pagenumbering{gobble}    
-	\tableofcontents
+	\pagenumbering{gobble}
+	{\hypersetup{linkcolor=black} 
+	\tableofcontents}
 	\newpage
 	\pagenumbering{arabic}
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -88,34 +126,35 @@
 %	\end{description}
 
 	\section{Motivation and Examples}
-	As stated in the introduction concurrent programs are commonly used and are inherently prone to data races. The following example shows a program written in the programming language C++, which exhibits a data race:
-	\begin{figure}[h]
-		\centering
-		\includegraphics{example-image}
-		\caption{PLACEHOLDER: show example in C showing data race, see slide \#2}
-		\label{data-race-ex}
-	\end{figure}
+	As stated in the introduction concurrent programs are commonly used and are inherently prone to data races. Data races can be hard to find and might not be apparent. This chapter will show a few examples from \cite{sulzmann2} but rewritten in the programming language C++. The following example shows a program, which exhibits a data race (see chapter \ref{background}):
+	\lstinputlisting[caption={Program containing conflicting events}, label={lst:conflicting}, language=C++]{conflicting_event.cpp}
+	The listing \ref{lst:conflicting} can be represented by the following trace:
+	\begin{table}[h]
+		\begin{center}
+			\begin{tabular}{ c c c}
+				& 1\# & 2\# \\
+				\hline
+				1. & w(x) & \\
+				2. & acq(y) & \\
+				3. & rel(y) & \\
+				4. & & acq(y) \\
+				5. & & w(x) \\
+				6. & & rel(y) \\
+			\end{tabular}
+			\caption{Possible trace of listing \ref{lst:conflicting}}
+		\end{center}
+	\end{table}
 	
-	\section{Background}
+	
+	\section{Background}\label{background}
 		\subsection{Data Race}
-		Sulzmann and Stadtm\"uller \cite[p. 1]{sulzmann} define data races as follows: 'A data race arises if two unprotected, conflicting read/write operations from different threads happen at the same time.' Further they state that a data race can be described as: '[...] two read/write events on the same variable where at least one of them is a write event and both events result from different threads.'
+		Sulzmann and Stadtm\"uller \cite[p. 1]{sulzmann} define data races as follows: 'A data race arises if two unprotected, conflicting read/write operations from different threads happen at the same time.' Further they state that a data race can be described as follows: 
+		\begin{quote}
+			Let \textit{e}, \textit{f} be two read/write events on the same variable where at least one of them is a write event and both events result from different threads. Then, we say that \textit{e} and \textit{f} are two \textit{conflicting events}. [...] [I]f two conflicting events can appear right next to each other [,then s]uch a situation represents a \textit{data race}.
+		\end{quote}
+	
+		
 		\subsection{Happens-Before Relation}
-		The example shown in figure \ref{data-race-ex} can be represented by the following trace:
-		\begin{table}[h]
-			\begin{center}
-				\begin{tabular}{ c c c}
-					& 1\# & 2\# \\
-					\hline
-					1. & w(x) & \\
-					2. & acq(y) & \\
-					3. & rel(y) & \\
-					4. & & acq(y) \\
-					5. & & w(x) \\
-					6. & & rel(y) \\
-				\end{tabular}
-				\caption{Trace 1}
-			\end{center}
-		\end{table}
 		
 		\subsection{Vector-Clock}
 		\subsection{Epoch}
@@ -144,4 +183,7 @@
 	\newpage
 	\listoftables
 	\addcontentsline{toc}{section}{List of Tables}
+	\newpage
+	\lstlistoflistings
+	\addcontentsline{toc}{section}{List of Listings}
 \end{document}

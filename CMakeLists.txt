@@ -9,8 +9,9 @@ include_directories(src)
         src/fasttrack_incomplete.cpp
         src/fasttrack_incomplete.h)]]
 
-add_executable(vector_clock_limitation
-        src/vector_clock_limitation_example.cpp
-        src/vector_clock_limitation_example.h)
+add_executable(tsan_v2_seminar
+        src/main.cpp
+        src/main.h
+        src/simple_data_race.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fPIE -pie -g")
