@@ -178,12 +178,15 @@
 	\newpage                                          
 	\printbibliography[heading= bibintoc, title={List of Literature}]
 	\newpage
-	\listoffigures
-	\addcontentsline{toc}{section}{List of Figures}
-	\newpage
-	\listoftables
-	\addcontentsline{toc}{section}{List of Tables}
-	\newpage
-	\lstlistoflistings
-	\addcontentsline{toc}{section}{List of Listings}
+	{\hypersetup{linkcolor=black}
+		\listoffigures
+		\addcontentsline{toc}{section}{List of Figures}
+		\newpage
+		\listoftables
+		\addcontentsline{toc}{section}{List of Tables}
+		\newpage
+		\lstlistoflistings
+		\addcontentsline{toc}{section}{List of Listings}
+	}
+
 \end{document}
