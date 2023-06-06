@@ -3,10 +3,6 @@
 
 #include "fasttrack_incomplete.h"
 #include <pthread.h>
-#include <stdio.h>
-
-#include <pthread.h>
-#include <stdio.h>
 
 int var;
 

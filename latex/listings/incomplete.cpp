@@ -1,25 +1,19 @@
-#include "pthread.h"
+#include <pthread.h>
 
-int var1;
-pthread_mutex_t var2;
+int var;
 
 void *Thread1(void *x) {
     // w(x)1
-    var1++;
-    // acq(y)1
-    pthread_mutex_lock(&var2);
-    // rel(y)1
-    pthread_mutex_unlock(&var2);
+    var++;
     return NULL;
 }
 
 void *Thread2(void *x) {
-    // acq(y)2
-    pthread_mutex_lock(&var2);
     // w(x)2
-    var1--;
-    // rel(y)2
-    pthread_mutex_unlock(&var2);
+    var--;
+    // w(x)3
+    // this write will not be reported as part of a data race
+    var++;
     return NULL;
 }
 

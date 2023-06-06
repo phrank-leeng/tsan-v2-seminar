@@ -1,29 +1,28 @@
-#include "pthread.h"
+//
+// Created by unknown on 06.06.23.
+//
+#include <pthread.h>
+#include "unsoundness.h"
 
 int var1;
-pthread_mutex_t var2;
+int var2;
 
 void *Thread1(void *x) {
     // w(x)1
-    var1++;
-    // acq(y)1
-    pthread_mutex_lock(&var2);
-    // rel(y)1
-    pthread_mutex_unlock(&var2);
+    var2 = var1 + 5;
     return NULL;
 }
 
 void *Thread2(void *x) {
-    // acq(y)2
-    pthread_mutex_lock(&var2);
     // w(x)2
-    var1--;
-    // rel(y)2
-    pthread_mutex_unlock(&var2);
+    if (var2 == 5)
+        var1 = 10;
+    else
+        while (true);
     return NULL;
 }
 
-int main() {
+void unsoundness::run() {
     pthread_t t[2];
     pthread_create(&t[0], NULL, Thread1, NULL);
     pthread_create(&t[1], NULL, Thread2, NULL);

@@ -5,7 +5,8 @@
 #include "main.h"
 #include "simple_data_race.h"
 #include "fasttrack_incomplete.h"
+#include "unsoundness.h"
 
 int main() {
-    simple_data_race::run();
+    unsoundness::run();
 }

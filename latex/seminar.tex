@@ -23,6 +23,7 @@
 \usepackage{setspace}
 \usepackage{microtype}
 \usepackage{listings}
+\usepackage{float}
 \lstset{inputpath=./listings/}
 \renewcommand\lstlistlistingname{List of Listings}
 
@@ -35,7 +36,7 @@
 	citecolor   = red,
 	filecolor   = red,
 	linkcolor   = red,
-	urlcolor    = red,
+	urlcolor    = black,
 	pdftitle    = {Seminararbeit},                                               % SET FILE PARAMETERS HERE (SHOWN IN PDF PROPERTIES)
 	pdfsubject  = {Dynamische Programmanalysen für nebenläufige Programme - Data Race Prediction mit TSan V2},                                       % ...
 	pdfauthor   = {Frank Ling},                                                 % ...
@@ -126,10 +127,10 @@
 %	\end{description}
 
 	\section{Motivation and Examples}
-	As stated in the introduction concurrent programs are commonly used and are inherently prone to data races. Data races can be hard to find and might not be apparent. This chapter will show a few examples from \cite{sulzmann2} but rewritten in the programming language C++. The following example shows a program, which exhibits a data race (see chapter \ref{background}):
+	As stated in the introduction concurrent programs are commonly used and are inherently prone to data races. Data races can be hard to find and might not be apparent. This chapter will show a few examples from \cite{sulzmann2} but rewritten in the programming language C++. The following example shows a program, which exhibits a data race (see chapter \ref{background-sec}):
 	\lstinputlisting[caption={Program containing conflicting events}, label={lst:conflicting}, language=C++]{conflicting_event.cpp}
-	The listing \ref{lst:conflicting} can be represented by the following trace:
-	\begin{table}[h]
+	Acquiring and releasing a lock is accomplished by the \texttt{pthread\_mutex\_lock()}- and the \texttt{pthread\_mutex\_unlock()}-method. The following trace can be generated for the program \ref{lst:conflicting}:
+	\begin{table}[H]
 		\begin{center}
 			\begin{tabular}{ c c c}
 				& 1\# & 2\# \\
@@ -142,20 +143,41 @@
 				6. & & rel(y) \\
 			\end{tabular}
 			\caption{Possible trace of listing \ref{lst:conflicting}}
+			\label{trace1}
 		\end{center}
 	\end{table}
-	
-	
-	\section{Background}\label{background}
+	In the trace \ref{trace1} the events $1\#w(x)_1$ and $2\#w(x)_5$ do not appear right next to each other which might indicate that these two events are not part of a data race. By rerunning the program \ref{lst:conflicting} eventually the following trace can be obtained:
+	\begin{table}[H]
+		\begin{center}
+			\begin{tabular}{ c c c}
+				& 1\# & 2\# \\
+				\hline
+				4. & & acq(y) \\
+				5. & & w(x) \\
+				1. & w(x) & \\
+				6. &  & rel(y) \\
+				2. & acq(y) & \\
+				3. & rel(y) & \\
+			\end{tabular}
+			\caption{Possible trace of listing \ref{lst:conflicting}}
+			\label{trace2}
+		\end{center}
+	\end{table}
+	The trace \ref{trace2} shows the two events $1\#w(x)_1$ and $2\#w(x)_5$ are now right next to each other and hence they are part of a data race. This only became apparent after reordering the original trace \ref{trace1} which shows that data races may be hard to detect in some cases.
+	\section{Background}\label{background-sec}
+		\subsection{Dynamic Data Race Prediction}
+		The method of reordering traces to try to predict data races is called dynamic data race prediction, see \cite[p. 2]{sulzmann2} for more details, and will be discussed in this work. The approach of finding all reorderings is used in exhaustive predictive methods. Since modern programs may utilize multiple threads each executing large blocks of code, finding all possible reorderings might not always be feasible. Therefore effective predictive methods are employed which compromise completeness and soundness for better coverage. FastTrack and TSan are examples for dynamic data race prediction using effective predictive methods. Sulzmann and Stadtm\"uller \cite[p. 2]{sulzmann} define completeness and soundness as follows:
+		\begin{quote}
+			Sound means that races reported by the algorithm can be observed via some appropriate reordering of the trace. If unsound, we refer to wrongly a classiﬁed race as a \textit{false positive}. Complete means that all valid reorderings that exhibit some race can be predicted by the algorithm. If incomplete, we refer to any not reported race as a \textit{false negative}.
+		\end{quote}
 		\subsection{Data Race}
-		Sulzmann and Stadtm\"uller \cite[p. 1]{sulzmann} define data races as follows: 'A data race arises if two unprotected, conflicting read/write operations from different threads happen at the same time.' Further they state that a data race can be described as follows: 
+		Sulzmann and Stadtm\"uller \cite[p. 1]{sulzmann} define a data race as follows: 
 		\begin{quote}
 			Let \textit{e}, \textit{f} be two read/write events on the same variable where at least one of them is a write event and both events result from different threads. Then, we say that \textit{e} and \textit{f} are two \textit{conflicting events}. [...] [I]f two conflicting events can appear right next to each other [,then s]uch a situation represents a \textit{data race}.
 		\end{quote}
-	
-		
+		An example of a data race can be seen in the trace \ref{trace2}.
 		\subsection{Happens-Before Relation}
-		
+		As stated in \cite[p. 4]{sulzmann2}, the happens-before relation is used to partially order the events in a system. The happens-before relation is defined as a strict partial order so the ordering is transitive but irreflexive. If the event \textit{e} is ordered before the event \textit{f} then $e <^{HB} f$ applies, where $<^{HB}$ denotes the 
 		\subsection{Vector-Clock}
 		\subsection{Epoch}
 %		\begin{itemize}
@@ -165,7 +187,9 @@
 %			
 %		\end{itemize}
 	
-	\section{FastTrack + TSan}
+	\section{FastTrack + TSan}\label{fasttrack-sec}
+	\lstinputlisting[caption={Program demonstrating the incompleteness of TSan}, label={lst:conflicting}, language=C++]{incomplete.cpp}
+	\lstinputlisting[caption={Program demonstrating the unsoundness of TSan}, label={lst:conflicting}, language=C++]{unsoundness.cpp}
 %	\begin{itemize}
 %		\item Effiziente Umsetzung der happens-before methode
 %		\item FastTrack uses an optimized semi-adaptive version of epochs
