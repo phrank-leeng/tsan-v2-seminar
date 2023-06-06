@@ -81,6 +81,8 @@
 
 %%| SET OTHER PARAMETERS HERE |%%
 \addbibresource{document/bibliography/ref.bib}
+%% clearpage before every section
+\AddToHook{cmd/section/before}{\clearpage}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%| TITLE PAGE |%%
@@ -177,7 +179,7 @@
 		\end{quote}
 		An example of a data race can be seen in the trace \ref{trace2}.
 		\subsection{Happens-Before Relation}
-		As stated in \cite[p. 4]{sulzmann2}, the happens-before relation is used to partially order the events in a system. The happens-before relation is defined as a strict partial order so the ordering is transitive but irreflexive. If the event \textit{e} is ordered before the event \textit{f} then $e <^{HB} f$ applies, where $<^{HB}$ denotes the 
+		As stated in \cite[p. 4]{sulzmann2}, the happens-before relation is used to partially order the events in a system. The happens-before relation is defined as a strict partial order so the ordering is transitive but irreflexive. Events can either be ordered and therefore a happens-before relation can be established between them, or they can not be ordered in which case a data race is supposedly found. In FastTrack and TSan Lamport's happens-before relation, referred to as HB relation, is used. It additionally impose the program order condition and critical section order condition. The program order condition defines that two events $e$ and $f$ belonging to the same thread, with $e$ appearing before $f$ in the trace, then $e <^{HB} f$ applies. $<^{HB}$ denotes the HB ordering relation. The critical section order condition imposes that for two acquire and release events $acq(y)$ and $rel(y)$, with $rel(y)$ appearing before $acq(y)$ in the trace, then $rel(y) <^{HB} acq(y)$ applies.
 		\subsection{Vector-Clock}
 		\subsection{Epoch}
 %		\begin{itemize}
