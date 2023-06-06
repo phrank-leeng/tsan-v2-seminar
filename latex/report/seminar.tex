@@ -131,8 +131,7 @@
 	\section{Motivation and Examples}
 	As stated in the introduction concurrent programs are commonly used and are inherently prone to data races. The problem with data races is that they can cause undefined behavior and crashes while also being hard to reproduce. This makes data races hard to find and they might not always be apparent. This chapter will show a few examples from \cite{sulzmann2} but rewritten in the programming language C++. The following example shows a program, which exhibits a data race (see chapter \ref{background-sec}):
 	\lstinputlisting[caption={Program containing conflicting events}, label={lst:conflicting}, language=C++]{conflicting_event.cpp}
-	
-	Acquiring and releasing a lock is accomplished by the \texttt{pthread\_mutex\_lock()}- and the \texttt{pthread\_mutex\_unlock()}-method. The following trace can be generated for the program \ref{lst:conflicting}:
+	Generally the corresponding event in the resulting trace is seen above each operation as a comment in the code. For example acquiring and releasing a lock is accomplished by the \texttt{pthread\_mutex\_lock()}- and the \texttt{pthread\_mutex\_unlock()}-method, which is used in line 10, where a lock on the variable \texttt{var2} is acquired. The corresponding event in the trace would be $1\#acq(y)_2$ which is indicated by the method name and the comment above in line 9. The method name shows which thread the event is from and the comment specifies the event. The following trace can be generated for the program \ref{lst:conflicting}:
 	\begin{table}[H]
 		\begin{center}
 			\begin{tabular}{ c c c}
@@ -169,20 +168,26 @@
 	The trace \ref{trace2} shows the two events $1\#w(x)_1$ and $2\#w(x)_5$ are now right next to each other and hence they are part of a data race. This only became apparent after reordering the original trace \ref{trace1} which shows that data races may be hard to detect in some cases so tools are needed to detect them.
 	\section{Background}\label{background-sec}
 		\subsection{Dynamic Data Race Prediction}
-		The method of reordering traces to try to predict data races is called dynamic data race prediction, see \cite[p. 2]{sulzmann2} for more details, and will be discussed in this work. The approach of finding all reorderings is used in exhaustive predictive methods. Since modern programs may utilize multiple threads each executing large blocks of code, finding all possible reorderings might not always be feasible. Therefore effective predictive methods are employed which compromise completeness and soundness for better coverage. FastTrack and TSan are examples for dynamic data race prediction using effective predictive methods. Sulzmann and Stadtm\"uller \cite[p. 2]{sulzmann} define completeness and soundness as follows:
+		Race prediction can be done static or dynamic. Static race prediction uses static analysis, meaning it tries to find data races before running the code. For more details on static race prediction see \cite{naik}.\\
+		Dynamic data race prediction tools run a program and then try to find data races by reordering the obtained trace. The method of reordering traces to try to predict data races is called dynamic data race prediction, see \cite[p. 2]{sulzmann2}, and will be discussed in this work.\\
+		The approach of finding all possible reorderings is used in exhaustive predictive methods. Since modern programs may utilize multiple threads each executing large blocks of code, finding all possible reorderings might not always be feasible. Therefore effective predictive methods are employed which compromise \textit{completeness} and \textit{soundness} for better coverage. FastTrack and TSan are examples for dynamic data race prediction using effective predictive methods.\\
+		Sulzmann and Stadtm\"uller \cite[p. 2]{sulzmann} define completeness and soundness as follows:
 		\begin{quote}
 			Sound means that races reported by the algorithm can be observed via some appropriate reordering of the trace. If unsound, we refer to wrongly a classiﬁed race as a \textit{false positive}. Complete means that all valid reorderings that exhibit some race can be predicted by the algorithm. If incomplete, we refer to any not reported race as a \textit{false negative}.
 		\end{quote}
-		\subsection{Data Race}
-		Sulzmann and Stadtm\"uller \cite[p. 1]{sulzmann} define a data race as follows: 
-		\begin{quote}
-			Let $e$, $f$ be two read/write events on the same variable where at least one of them is a write event and both events result from different threads. Then, we say that $e$ and $f$ are two \textit{conflicting events}. [...] [I]f two conflicting events can appear right next to each other [,then s]uch a situation represents a \textit{data race}.
-		\end{quote}
-		An example of a data race can be seen in the trace \ref{trace2}.
-		\subsection{Happens-Before Relation}
-		As stated in \cite[p. 4]{sulzmann2}, the happens-before relation is used to partially order the events in a system. The happens-before relation is defined as a strict partial order so the ordering is transitive but irreflexive. Events can either be ordered and therefore a happens-before relation can be established between them, or they can not be ordered in which case both events 'are said to be \textit{concurrent}' \cite[p. 2]{lamport}. In FastTrack and TSan Lamport's happens-before relation \cite{lamport}, referred to as HB relation, is used. It additionally imposes the program order condition and critical section order condition. The program order condition defines that two events $e$ and $f$ belonging to the same thread, with $e$ appearing before $f$ in the trace, then $e <^{HB} f$ applies. $<^{HB}$ denotes the HB ordering relation. The critical section order condition imposes that for two acquire and release events $acq(y)$ and $rel(y)$, with $rel(y)$ appearing before $acq(y)$ in the trace, then $rel(y) <^{HB} acq(y)$ applies.
+		\subsection{Happens-Before Relation and Data Race}
+		As stated in \cite[p. 4]{sulzmann2}, the happens-before relation is used to partially order the events in a system. The happens-before relation is defined as a strict partial order so the ordering is transitive but irreflexive.\\
+		Events can either be ordered and therefore a happens-before relation can be established between them, or they can not be ordered in which case both events 'are said to be \textit{concurrent}' \cite[p. 2]{lamport}. Further two events '[...]\textit{conflict} if they both access (read or write) the same variable, and at least one of the operations is a write. Using this terminology, a trace has a race condition if it has two concurrent conflicting accesses.' \cite[p. 2]{cormac}. An example of a data race can be seen in the trace \ref{trace2}.\\
+		In FastTrack and TSan Lamport's happens-before relation \cite{lamport}, referred to as HB relation, is used. The HB relation additionally to the above imposes the program order condition and critical section order condition. The program order condition defines that two events $e$ and $f$ belonging to the same thread, with $e$ appearing before $f$ in the trace, then $e <^{HB} f$ applies. $<^{HB}$ denotes the HB ordering relation. The critical section order condition imposes that for two acquire and release events $acq(y)$ and $rel(y)$, with $rel(y)$ appearing before $acq(y)$ in the trace, then $rel(y) <^{HB} acq(y)$ applies \cite[p. 4]{sulzmann2}.
 		\subsection{Vector-Clock}
-		
+		As stated by Cormac \cite[p. 1]{cormac}:
+		\begin{quote}
+			Typically, the happens-before relation is represented using
+			vector clocks (VCs) [...]. Vector clocks are expensive, however, because they record information about each thread in a system. Thus, if the target program has n threads, then each VC requires O(n) storage space and each VC operation requires O(n) time.
+			Motivated in part by the performance limitations of vector
+			clocks, a variety of alternative imprecise race detectors have been developed, which may provide better coverage but can report false alarms on race-free programs.
+		\end{quote}
+		notation of VC, inc, sync...
 		\subsection{Epoch}
 %		\begin{itemize}
 %			\item was genau ist ein data race

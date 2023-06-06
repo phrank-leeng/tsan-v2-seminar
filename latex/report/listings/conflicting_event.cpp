@@ -6,19 +6,19 @@ pthread_mutex_t var2;
 void *Thread1(void *x) {
     // w(x)1
     var1++;
-    // acq(y)1
+    // acq(y)2
     pthread_mutex_lock(&var2);
-    // rel(y)1
+    // rel(y)3
     pthread_mutex_unlock(&var2);
     return NULL;
 }
 
 void *Thread2(void *x) {
-    // acq(y)2
+    // acq(y)4
     pthread_mutex_lock(&var2);
-    // w(x)2
+    // w(x)5
     var1--;
-    // rel(y)2
+    // rel(y)6
     pthread_mutex_unlock(&var2);
     return NULL;
 }
