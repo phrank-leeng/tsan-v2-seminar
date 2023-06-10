@@ -12,6 +12,6 @@ include_directories(src)
 add_executable(tsan_v2_seminar
         src/main.cpp
         src/main.h
-        src/unsoundness.cpp)
+        src/shadow_word_limitation.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fPIE -pie -g")

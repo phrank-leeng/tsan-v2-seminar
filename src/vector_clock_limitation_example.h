@@ -7,7 +7,8 @@
 
 
 class vector_clock_limitation_example {
-
+public:
+    static void run();
 };
 
 

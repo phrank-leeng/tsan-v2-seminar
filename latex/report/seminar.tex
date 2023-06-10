@@ -99,7 +99,7 @@
 				Universität:        & \quad Hochschule Karlsruhe – Technik und Wirtschaft   &       \\[2ex]
 				Studiengang:        & \quad Informatik, Master                &       \\[2ex]
 				Semester:           & \quad Sommersemester 2023                             &       \\[2ex]
-				Dozent:             & \quad Prof. Martin Sulzmann                       &       \\[2ex]
+				Betreuer:             & \quad Prof. Martin Sulzmann                       &       \\[2ex]
 				Bearbeitet am:      & \quad \today                                  &       \\[2ex]
 			\end{tabular}
 		\end{center}
@@ -115,7 +115,7 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| WRITE TEXT HERE |%%
 	\section{Introduction}
-	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This seminar work shows the motivation and background for the data prediction tool ThreadSanitizer (TSan) V2, which differentiates itself from the first version by utilizing happens-before methods instead of the lockset method. Afterwards the concepts of the FastTrack \cite{cormac} algorithm will be shown as TSan uses a slightly modified version of the FastTrack algorithm. Examples showing the limits of FastTrack and TSan follow, as they are both incomplete and thus do not find every data race. In the following the same notation as in \cite{sulzmann} will be used for traces and events.
+	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This seminar work shows the motivation and background for the data prediction tool ThreadSanitizer (TSan) V2, which differentiates itself from the first version by utilizing happens-before methods instead of the lockset method. Afterwards the concepts of the FastTrack \cite{flanagan} algorithm will be shown as TSan uses a slightly modified version of the FastTrack algorithm. Examples showing the limits of FastTrack and TSan follow, as they are both incomplete and thus do not find every data race. In the following the same notation as in \cite{sulzmann} will be used for traces and events.
 	
 %	\begin{description}
 %		\item[data race] concurrent programs prone to data races, due to highly nondeterministic nature. 2 conflicting events next to each other in trace
@@ -131,7 +131,7 @@
 	\section{Motivation and Examples}
 	As stated in the introduction concurrent programs are commonly used and are inherently prone to data races. The problem with data races is that they can cause undefined behavior and crashes while also being hard to reproduce. This makes data races hard to find and they might not always be apparent. This chapter will show a few examples from \cite{sulzmann2} but rewritten in the programming language C++. The following example shows a program, which exhibits a data race (see chapter \ref{background-sec}):
 	\lstinputlisting[caption={Program containing conflicting events}, label={lst:conflicting}, language=C++]{conflicting_event.cpp}
-	Generally the corresponding event in the resulting trace is seen above each operation as a comment in the code. For example acquiring and releasing a lock is accomplished by the \texttt{pthread\_mutex\_lock()}- and the \texttt{pthread\_mutex\_unlock()}-method, which is used in line 10, where a lock on the variable \texttt{var2} is acquired. The corresponding event in the trace would be $1\#acq(y)_2$ which is indicated by the method name and the comment above in line 9. The method name shows which thread the event is from and the comment specifies the event. The following trace can be generated for the program \ref{lst:conflicting}:
+	Generally the corresponding event in the resulting trace is seen above each operation as a comment in the code. For example acquiring and releasing a lock is accomplished by the \texttt{pthread\_mutex\_lock()}- and the \texttt{pthread\_mutex\_unlock()}-method, which is used in line 10, where a lock on the variable \texttt{var2} is acquired. The corresponding event in the trace would be $1\#acq(y)_2$ which is indicated by the method name and the comment above in line 9. The method name shows which thread the event is from and the comment specifies the event. As a write event a variable can simply be incremented or assigned a value. A simple read event could be printing a variable in the console as it accesses the value of the variable. The following trace can be generated for the program \ref{lst:conflicting}:
 	\begin{table}[H]
 		\begin{center}
 			\begin{tabular}{ c c c}
@@ -177,17 +177,33 @@
 		\end{quote}
 		\subsection{Happens-Before Relation and Data Race}
 		As stated in \cite[p. 4]{sulzmann2}, the happens-before relation is used to partially order the events in a system. The happens-before relation is defined as a strict partial order so the ordering is transitive but irreflexive.\\
-		Events can either be ordered and therefore a happens-before relation can be established between them, or they can not be ordered in which case both events 'are said to be \textit{concurrent}' \cite[p. 2]{lamport}. Further two events '[...]\textit{conflict} if they both access (read or write) the same variable, and at least one of the operations is a write. Using this terminology, a trace has a race condition if it has two concurrent conflicting accesses.' \cite[p. 2]{cormac}. An example of a data race can be seen in the trace \ref{trace2}.\\
-		In FastTrack and TSan Lamport's happens-before relation \cite{lamport}, referred to as HB relation, is used. The HB relation additionally to the above imposes the program order condition and critical section order condition. The program order condition defines that two events $e$ and $f$ belonging to the same thread, with $e$ appearing before $f$ in the trace, then $e <^{HB} f$ applies. $<^{HB}$ denotes the HB ordering relation. The critical section order condition imposes that for two acquire and release events $acq(y)$ and $rel(y)$, with $rel(y)$ appearing before $acq(y)$ in the trace, then $rel(y) <^{HB} acq(y)$ applies \cite[p. 4]{sulzmann2}.
+		Events can either be ordered and therefore a happens-before relation can be established between them, or they can not be ordered in which case both events 'are said to be \textit{concurrent}' \cite[p. 2]{lamport}. Further two events '[...]\textit{conflict} if they both access (read or write) the same variable, and at least one of the operations is a write. Using this terminology, a trace has a race condition if it has two concurrent conflicting accesses.' \cite[p. 2]{flanagan}. An example of a data race can be seen in the trace \ref{trace2}.\\
+		In FastTrack and TSan Lamport's happens-before relation \cite{lamport}, referred to as HB relation, is used. The HB relation additionally to the above imposes the program order condition and critical section order condition. The program order condition defines that two events $e$ and $f$ belonging to the same thread, with $e$ appearing before $f$ in the trace, then $e <^{HB} f$ applies. $<^{HB}$ denotes the HB ordering relation. The critical section order condition imposes that for two acquire and release events $acq(y)$ and $rel(y)$ on the same lock $y$ where both events result from different threads with $rel(y)$ appearing before $acq(y)$ in the trace, then $rel(y) <^{HB} acq(y)$ applies \cite[p. 4]{sulzmann2}.
 		\subsection{Vector-Clock}
-		As stated by Cormac \cite[p. 1]{cormac}:
+		As stated by Flanagan and Freund \cite[p. 1]{flanagan}:
 		\begin{quote}
-			Typically, the happens-before relation is represented using
-			vector clocks (VCs) [...]. Vector clocks are expensive, however, because they record information about each thread in a system. Thus, if the target program has n threads, then each VC requires O(n) storage space and each VC operation requires O(n) time.
+			Typically, the happens-before relation is represented using vector clocks (VCs) [...]. Vector clocks are expensive, however, because they record information about each thread in a system. Thus, if the target program has n threads, then each VC requires O(n) storage space and each VC operation requires O(n) time.
 			Motivated in part by the performance limitations of vector
 			clocks, a variety of alternative imprecise race detectors have been developed, which may provide better coverage but can report false alarms on race-free programs.
 		\end{quote}
-		notation of VC, inc, sync...
+		Sulzmann and Stadtm\"uller define vector clocks as follows \cite[p. 7]{sulzmann}:
+		\begin{quote}
+			A vector clock $V$ is a list of time
+			stamps of the following form.
+			\begin{equation}
+				v ::= [i_1,...,i_n]
+			\end{equation}
+			We assume vector clocks are of a ﬁxed size $n$. Time stamps are natural numbers and each time stamp position $j$ corresponds to the thread with identiﬁer $j$. We deﬁne
+			\begin{equation}
+				[i_1,...,i_n]\sqcup[j_i,...,j_n] = [\text{max}(i_1,j_1),...,\text{max}(i_n,j_n)]
+			\end{equation}
+			to synchronize two vector clocks by building the point-wise maximum.
+			We write $V[j]$ to access the time stamp at position $j$. We write inc$(V,j)$ as a short-hand for incrementing the vector clock $V$ at position $j$ by one.
+			We deﬁne vector clock $V_1$ to be smaller than vector clock $V_2$, written $V_1 < V_2$, if (1) for each thread $i$, $i$'s time stamp in $V_1$ is smaller or equal compared to $i$'s time stamp in $V_2$, and (2) there exists a thread $i$ where $i$'s time stamp in $V_1$ is strictly smaller compared to $i$'s time stamp in $V_2$. [...] For each thread $i$ we maintain a vector clock $Th(i)$. [...]Initially, for each vector clock $Th(i)$ all time stamps are set to 0 but position $i$ where the time stamp is set to 1.
+		\end{quote}
+		Sulzmann and Stadtm\"uller further state that for two events $e$ and $f$ with vector clocks $V_1$ assigned to $e$ and $V_2$ assigned to $f$, if $V_1 < V_2$ then it can be said that $e <^{HB} f$. Further for synchronization the following applies. $V_1 = V_2 \sqcup V_3$ then $V_1 \leq V_2$ and $V_1 \leq V_3$.\\
+		With Lamport's HB relation vector clocks are incremented after processing an event to enforce the program order condition. That results in events having a pre vector clock and a post vector clock. As an example in trace \ref{trace1}, 1\#w(x) will have the pre vector clock $[1,0]$, as we are in the first thread we must initialize set the time stamp at position one to zero, and the post vector clock $[2,0]$. For following events the pre vector clock be the same as the post vector clock of the previous event. So for 2\#acq(y) the pre vector clock will be $[2,0]$ and the post vector clock $[3,0]$. To enforce the critical section order condition the pre vector
+		%%notation of VC, inc, sync...
 		\subsection{Epoch}
 %		\begin{itemize}
 %			\item was genau ist ein data race
