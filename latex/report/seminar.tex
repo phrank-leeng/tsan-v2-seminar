@@ -115,8 +115,8 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| WRITE TEXT HERE |%%
 	\section{Introduction}
-	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This seminar work shows the motivation and background for the data prediction tool ThreadSanitizer (TSan) V2, which differentiates itself from the first version by utilizing happens-before methods instead of the lockset method. Afterwards the concepts of the FastTrack \cite{flanagan} algorithm will be shown as TSan uses a slightly modified version of the FastTrack algorithm. Examples showing the limits of FastTrack and TSan follow, as they are both incomplete and thus do not find every data race. In the following the same notation as in \cite{sulzmann} will be used for traces and events.
-	
+	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This will be elaborated in the following section. This seminar work specifically analyzes the data race prediction algorithms of FastTrack and ThreadSanitizer (TSan) V2. TSan V2 uses a slightly modified version of the FastTrack algorithm and differentiates itself from the first version by utilizing happens-before methods instead of the lockset method.\\
+	Firstly the motivation and background for dynamic data race prediction tools will be shown. Then the FastTrack and TSan algorithms will be demonstrated along with examples showing the limitations of FastTrack and TSan. In the following the same notation as in \cite{sulzmann} will be used for traces and events.
 %	\begin{description}
 %		\item[data race] concurrent programs prone to data races, due to highly nondeterministic nature. 2 conflicting events next to each other in trace
 %		\item[conflicting event] 2 read/write events, at least one event is write event
@@ -165,7 +165,7 @@
 			\label{trace2}
 		\end{center}
 	\end{table}
-	The trace \ref{trace2} shows the two events $1\#w(x)_1$ and $2\#w(x)_5$ are now right next to each other and hence they are part of a data race. This only became apparent after reordering the original trace \ref{trace1} which shows that data races may be hard to detect in some cases so tools are needed to detect them.
+	The trace \ref{trace2} shows the two events $1\#w(x)_1$ and $2\#w(x)_5$ are now right next to each other and hence they are part of a data race. This also shows that there are data races that can only be detected under a specific schedule. Data race prediction tools use various methods to try to predict such cases. This report will analyze 
 	\section{Background}\label{background-sec}
 		\subsection{Dynamic Data Race Prediction}
 		Race prediction can be done static or dynamic. Static race prediction uses static analysis, meaning it tries to find data races before running the code. For more details on static race prediction see \cite{naik}.\\
