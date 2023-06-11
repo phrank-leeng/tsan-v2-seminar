@@ -7,6 +7,7 @@ cmake-build-debug/*
 *.lof
 *.log
 *.lot
+*.lol
 *.fls
 *.out
 *.toc
@@ -23,6 +24,10 @@ cmake-build-debug/*
 *-blx.aux
 *-blx.bib
 *.run.xml
+
+## Beamer auxiliary files:
+*.nav
+*.snm
 
 ## Build tool auxiliary files:
 *.fdb_latexmk
