@@ -232,6 +232,8 @@
 	\end{table}
 	Describe shadow cells and shadow words, then example...
 	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow words}]{shadow_word_limitation.cpp}
+	ThreadSanitizer fails to show stack trace for data races that are at least 16 threads apart from each other
+	\lstinputlisting[caption={Program showing thread count limitation}]{thread_count_limitation.cpp}
 %	\begin{itemize}
 %		\item Effiziente Umsetzung der happens-before methode
 %		\item FastTrack uses an optimized semi-adaptive version of epochs
