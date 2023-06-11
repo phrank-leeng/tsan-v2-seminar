@@ -203,8 +203,10 @@
 		\end{quote}
 		Sulzmann and Stadtm\"uller further state that for two events $e$ and $f$ with vector clocks $V_1$ assigned to $e$ and $V_2$ assigned to $f$, if $V_1 < V_2$ then it can be said that $e <^{HB} f$. Further for synchronization the following applies. $V_1 = V_2 \sqcup V_3$ then $V_1 \leq V_2$ and $V_1 \leq V_3$.\\
 		For the cases where neither $V_1 < V_2$ nor $V_2 < V_1$ is true it can be said that $V_1$ and $V_2$ are incomparable \cite[p. 8]{sulzmann2}. The events assigned with $V_1$ and $V_2$ are therefore concurrent. If at least one of the events is a write event, then a data race has been found.\\ 
-		With Lamport's HB relation for events in the same thread $j$ with the respective vector clock $V_n$, the operation $\text{inc}(V_n,j)$ is applied after processing the event. This is to enforce the program order condition. That results in events having a pre vector clock $\text{pre\_}V$ and a post vector clock $\text{post\_}V$. As an example in trace \ref{trace1}, 1\#w(x) will have the pre vector clock $[1,0]$, as we are in the first thread we must initialize set the time stamp at position one to zero. Then $\text{inc}(\text{pre\_}V_1,1)$ is applied so the post vector clock would be $\text{post\_}V_1=[2,0]$. For following events in the same thread the pre vector clock is the same as the post vector clock of the previous event. So for 2\#acq(y) the pre vector clock would be $[2,0]$ and the post vector clock $[3,0]$. To enforce the critical section order condition the pre vector clock of an acquire event following a release event on the same lock has to be synchronized. The post vector clock of the acquire event will be the incremented synchronized vector clock. In trace \ref{trace1} the pre vector clock of 3\#rel(y) is $[3,0]$ and $[0,1]$ for 4\#acq(y). So the synchronized vector clock is $V_2=[3,1]$ and after applying $\text{inc}(V_2,2)$, the vector clock for 4\#acq(y) would be $[3,2]$. For further details on vector clocks, see \cite[p. 8]{sulzmann2}\cite.
+		With Lamport's HB relation for events in the same thread $j$ with the respective vector clock $V_n$, the operation $\text{inc}(V_n,j)$ is applied after processing the event. This is to enforce the program order condition. That results in events having a pre vector clock $\text{pre\_}V$ and a post vector clock $\text{post\_}V$. As an example in trace \ref{trace1}, $1\#w(x)_1$ will have the pre vector clock $[1,0]$, as we are in the first thread we must initialize set the time stamp at position one to zero. Then $\text{inc}(\text{pre\_}V_1,1)$ is applied so the post vector clock would be $\text{post\_}V_1=[2,0]$. For following events in the same thread the pre vector clock is the same as the post vector clock of the previous event. So for $2\#acq(y)_4$ the pre vector clock would be $[2,0]$ and the post vector clock $[3,0]$. To enforce the critical section order condition the pre vector clock of an acquire event following a release event on the same lock has to be synchronized. The post vector clock of the acquire event will be the incremented synchronized vector clock. In trace \ref{trace1} the pre vector clock of $1\#rel(y)_3$ is $[3,0]$ and $[0,1]$ for $2\#acq(y)_4$. So the synchronized vector clock is $V_2=[3,1]$ and after applying $\text{inc}(V_2,2)$, $\text{post\_}V_2$ for $2\#acq(y)_4$ would be $[3,2]$. For further details on vector clocks, see \cite[p. 8]{sulzmann2}\cite.
 		\subsection{Epoch}
+		Flanagan and Freund \cite[p. 2]{flanagan} state that vector clock-based race detectors record clock of the most recent write to each variable $x$ by each thread $t$. As all writes to $x$ are totally ordered (assuming no races detected so far), meaning that for all $w(x)_n$ events the HB relation $V_1<V_2<...<V_n$ can be established. Therefore recording information only about the very last write to x, specifically the clock and the thread identifier of that write, results in no loss of precision while needing less space. This pair of a clock and thread identifier is referred as epoch. Epochs are denoted as $j\#k$ with the thread identifier $j$ and the time stamp $k$.\\
+		As vector clocks record the time stamps for all $n$ threads they need $O(n)$ space while epochs need $O(1)$ space. However '[m]aintaining a growing and shrinking set of epochs can be costly. This applies for cases where many elements are added but also removed.'\cite[p. 10]{sulzmann2}. Instead adaptive approaches can be utilized which makes switching between epochs and vector clocks depending on the situation is possible.
 %		\begin{itemize}
 %			\item was genau ist ein data race
 %			\item wie k\"onnen data races dynamisch erkannt werden?
@@ -212,10 +214,11 @@
 %		\end{itemize}
 	
 	\section{FastTrack + TSan}\label{fasttrack-sec}
+	FastTrack is incomplete as the following example program, taken from \cite[p. 10]{sulzmann2} shows:
 	\lstinputlisting[caption={Program demonstrating the incompleteness of TSan}, label={lst:incomplete}, language=C++]{incomplete.cpp}
-	As seen in \cite{marthur} Lamport's happens-before relation is also unsound. Because FastTrack and TSan both use the HB relation they might produce false positives as a result. The following program \ref{lst:unsound} shows an example in which TSan produces a false negative:
+	As seen in \cite[p. 2]{marthur} even though Lamport's happens-before relation is sound for the first detected data race, it may produce false positives. Because FastTrack and TSan both use the HB relation they may also produce false positives as a result. The following program \ref{lst:unsound} shows an example in which TSan produces a false positive:
 	\lstinputlisting[caption={Program demonstrating the unsoundness of TSan}, label={lst:unsound}, language=C++]{unsoundness.cpp}
-	The program \ref{lst:unsound} may produce the following trace \ref{trace3}:
+	The program \ref{lst:unsound} produces the following trace \ref{trace3}:
 	\begin{table}[H]
 		\begin{center}
 			\begin{tabular}{ c c c}
@@ -230,6 +233,7 @@
 			\label{trace3}
 		\end{center}
 	\end{table}
+	As 1\#r(x)\_1
 	Describe shadow cells and shadow words, then example...
 	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow words}]{shadow_word_limitation.cpp}
 	ThreadSanitizer fails to show stack trace for data races that are at least 16 threads apart from each other

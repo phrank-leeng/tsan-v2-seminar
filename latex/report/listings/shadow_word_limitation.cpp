@@ -7,31 +7,22 @@ int threadcount = 6;
 pthread_mutex_t m;
 
 void *Thread1(void *x) {
-    // w(x)
     var1=1;
-    // acq(y)
     pthread_mutex_lock(&m);
-    // rel(y)
     pthread_mutex_unlock(&m);
     return NULL;
 }
 
 void *ThreadN(void *x) {
-    // acq(y)
     pthread_mutex_lock(&m);
-    // rel(y)
     pthread_mutex_unlock(&m);
-    // r(x)
     cout<<var1;
     return NULL;
 }
 
 void *Thread6(void *x) {
-    // acq(y)
     pthread_mutex_lock(&m);
-    // rel(y)
     pthread_mutex_unlock(&m);
-    // w(x)
     var1=1;
     return NULL;
 }
