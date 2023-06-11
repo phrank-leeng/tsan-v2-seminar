@@ -114,19 +114,9 @@
 	\pagenumbering{arabic}
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| WRITE TEXT HERE |%%
-	\section{Introduction}
+	\section{Introduction}\label{intro}
 	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This will be elaborated in the following section. We specifically look at the dynamic data race prediction algorithms of FastTrack and ThreadSanitizer (TSan) V2. TSan V2 uses a slightly modified version of the FastTrack algorithm and differentiates itself from the first version by utilizing happens-before methods instead of the lockset method.\\
-	Firstly the motivation and background for dynamic data race prediction tools will be shown. Then the FastTrack and TSan algorithms will be demonstrated along with examples showing the limitations of FastTrack and TSan. In the following the same notation as in \cite{sulzmann} will be used for traces and events.
-%	\begin{description}
-%		\item[data race] concurrent programs prone to data races, due to highly nondeterministic nature. 2 conflicting events next to each other in trace
-%		\item[conflicting event] 2 read/write events, at least one event is write event
-%		\item[dynamic data race prediction] predict trace orderings that exhibit data races
-%		\item[exhaustive predictive methods] identify as many orderings as possible
-%		\item[efficient predictive methods] \(O(n)\) runtime, compromise completeness and soundness
-%		\item[HB relation] events can be ordered by happens-before relation and if they can't that means they can be ordered in a way that they are next to each other in the trace $\rightarrow$ data race
-%		\item[vector clocks] used to represent happens-before relation, if incomparable then data race
-%		\item[epochs] vector clocks need \(O(n)\) time and space, instead epochs can be used which consist of time stamp j and thread id k $\rightarrow$ j\#k
-%	\end{description}
+	Firstly the motivation and background for dynamic data race prediction tools will be shown. Then the FastTrack and TSan algorithms will be demonstrated along with examples showing the limitations of FastTrack and TSan. In the following the same
 
 	\section{Motivation and Examples}
 	As stated in the introduction concurrent programs are commonly used and are inherently prone to data races. The problem with data races is that they can cause undefined behavior and crashes while also being hard to reproduce. This makes data races hard to find and they might not always be apparent. This chapter will show a few examples from \cite{sulzmann2} but rewritten in the programming language C++. The following example shows a program, which exhibits a data race (see chapter \ref{background-sec}):
@@ -207,16 +197,38 @@
 		\subsection{Epoch}
 		Flanagan and Freund \cite[p. 2]{flanagan} state that vector clock-based race detectors record clock of the most recent write to each variable $x$ by each thread $t$. As all writes to $x$ are totally ordered (assuming no races detected so far), meaning that for all $w(x)_n$ events the HB relation $V_1<V_2<...<V_n$ can be established. Therefore recording information only about the very last write to x, specifically the clock and the thread identifier of that write, results in no loss of precision while needing less space. This pair of a clock and thread identifier is referred as epoch. Epochs are denoted as $j\#k$ with the thread identifier $j$ and the time stamp $k$.\\
 		As vector clocks record the time stamps for all $n$ threads they need $O(n)$ space while epochs need $O(1)$ space. However '[m]aintaining a growing and shrinking set of epochs can be costly. This applies for cases where many elements are added but also removed.'\cite[p. 10]{sulzmann2}. Instead adaptive approaches can be utilized which makes switching between epochs and vector clocks depending on the situation is possible.
-%		\begin{itemize}
-%			\item was genau ist ein data race
-%			\item wie k\"onnen data races dynamisch erkannt werden?
-%			\item happens-before Methode \cite[p. 4]{FAVA2020102473}
-%		\end{itemize}
-	
-	\section{FastTrack + TSan}\label{fasttrack-sec}
-	FastTrack is incomplete as the following example program, taken from \cite[p. 10]{sulzmann2} shows:
-	\lstinputlisting[caption={Program demonstrating the incompleteness of TSan}, label={lst:incomplete}, language=C++]{incomplete.cpp}
-	As seen in \cite[p. 2]{marthur} even though Lamport's happens-before relation is sound for the first detected data race, it may produce false positives. Because FastTrack and TSan both use the HB relation they may also produce false positives as a result. The following program \ref{lst:unsound} shows an example in which TSan produces a false positive:
+		
+	\section{FastTrack and TSan}\label{fasttrack-sec}
+	FastTrack and TSan both implement a semi-adaptive approach for storing information \cite[p. 10]{sulzmann2}. Initially only epochs are used. Once a read event on a variable $x$ is recorded, the epoch is switched to a vector clock and the vector clock is maintained for subsequent reads on the variable $x$. The assumption is that concurrent reads are very frequent. Write events are always represented as epochs under the assumption that all writes are totally ordered.\\
+	shadows cells and shadow states/words...
+	\subsection{Limitations of FastTrack and TSan}
+	While FastTrack and TSan are sound, at least for the first found race (as explained in the following chapter), they are both incomplete, as the example in chapter \ref{intro} shows. Analyzing the exact program \ref{lst:conflicting} using TSan, it reports that no race is found, while the program does contain a data race as the reordered trace \ref{trace2} shows. However switching lines 28 and 29 in program \ref{lst:conflicting} to more closely represent trace \ref{trace2} is sufficient for TSan to correctly detect the data race.\\
+	The assumption that all writes are totally ordered is not always the case as the following example \ref{lst:incomplete}, taken from \cite[p. 10]{sulzmann2}, shows.\\
+	\begin{minipage}{\linewidth}
+		\lstinputlisting[caption={Program demonstrating the incompleteness of TSan}, label={lst:incomplete}, language=C++]{incomplete.cpp}
+	\end{minipage}
+	The following trace \ref{trace4} can be obtained from program \ref{lst:incomplete}:
+	\begin{table}[H]
+		\begin{center}
+			\begin{tabular}{ c c c}
+				& 1\# & 2\# \\
+				\hline
+				1. & w(x) & \\
+				2. & & w(x) \\
+				3. & & w(x) \\
+			\end{tabular}
+			\caption{Trace \ref{trace1} reordered}
+			\label{trace4}
+		\end{center}
+	\end{table}
+	This produces the following vector clocks:
+	\begin{itemize}
+		\item $V_1(1\#w(x)_1) = [1,0]$
+		\item $V_2(2\#w(x)_2) = [0,1]$
+		\item $V_3(2\#w(x)_3) = [0,2]$
+	\end{itemize}
+	From this we can see that event $1\#w(x)_1$ is in a data race with both the events $2\#w(x)_2$ and $2\#w(x)_3$. However TSan only reports the first race with the event $2\#w(x)_2$.\\
+	Furthermore, as seen in \cite[p. 2]{marthur}, even though Lamport's happens-before relation is sound for the first detected data race, it may produce false positives. Because FastTrack and TSan both use the HB relation they may also produce false positives as a result. The following program \ref{lst:unsound} shows an example in which TSan produces a false positive.
 	\lstinputlisting[caption={Program demonstrating the unsoundness of TSan}, label={lst:unsound}, language=C++]{unsoundness.cpp}
 	The program \ref{lst:unsound} produces the following trace \ref{trace3}:
 	\begin{table}[H]
@@ -233,18 +245,14 @@
 			\label{trace3}
 		\end{center}
 	\end{table}
-	As 1\#r(x)\_1
-	Describe shadow cells and shadow words, then example...
+	
 	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow words}]{shadow_word_limitation.cpp}
 	ThreadSanitizer fails to show stack trace for data races that are at least 16 threads apart from each other
 	\lstinputlisting[caption={Program showing thread count limitation}]{thread_count_limitation.cpp}
-%	\begin{itemize}
-%		\item Effiziente Umsetzung der happens-before methode
-%		\item FastTrack uses an optimized semi-adaptive version of epochs
-%	\end{itemize}
 	
 	
 	\section{Conclusion}
+	After analyzing the FastTrack and TSan algorithms it can be concluded that there are neither algorithm is entirely sound nor complete. Both have limitations that make them unable to detect data races in certain situations. However as of this moment there are no scalable data race prediction tools that are completely sound and complete. Keeping that in mind both of these tools produce good results with good performance in regard to memory and time consumption as \cite{flanagan} shows.
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| BIBLIOGRAPHY |%%                 
 	\newpage                                          
