@@ -251,11 +251,11 @@
 	
 	\subsection{Shadow word length limit}
 	
-	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow word length}]{shadow_word_limitation.cpp}
+	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow word length}, label={lst:shadow}, language=C++]{shadow_word_limitation.cpp}
 	
 	\subsection{Thread count}
 	ThreadSanitizer fails to show stack trace for data races that are at least 16 threads apart from each other
-	\lstinputlisting[caption={Program showing thread count limitation}]{thread_count_limitation.cpp}
+	\lstinputlisting[caption={Program showing thread count limitation}, label={lst:threadcount}, language=C++]{thread_count_limitation.cpp}
 	
 	
 	\section{Conclusion}
