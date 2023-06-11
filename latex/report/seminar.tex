@@ -115,7 +115,7 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| WRITE TEXT HERE |%%
 	\section{Introduction}
-	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This will be elaborated in the following section. This seminar work specifically analyzes the data race prediction algorithms of FastTrack and ThreadSanitizer (TSan) V2. TSan V2 uses a slightly modified version of the FastTrack algorithm and differentiates itself from the first version by utilizing happens-before methods instead of the lockset method.\\
+	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This will be elaborated in the following section. We specifically look at the dynamic data race prediction algorithms of FastTrack and ThreadSanitizer (TSan) V2. TSan V2 uses a slightly modified version of the FastTrack algorithm and differentiates itself from the first version by utilizing happens-before methods instead of the lockset method.\\
 	Firstly the motivation and background for dynamic data race prediction tools will be shown. Then the FastTrack and TSan algorithms will be demonstrated along with examples showing the limitations of FastTrack and TSan. In the following the same notation as in \cite{sulzmann} will be used for traces and events.
 %	\begin{description}
 %		\item[data race] concurrent programs prone to data races, due to highly nondeterministic nature. 2 conflicting events next to each other in trace
@@ -165,12 +165,12 @@
 			\label{trace2}
 		\end{center}
 	\end{table}
-	The trace \ref{trace2} shows the two events $1\#w(x)_1$ and $2\#w(x)_5$ are now right next to each other and hence they are part of a data race. This also shows that there are data races that can only be detected under a specific schedule. Data race prediction tools use various methods to try to predict such cases. This report will analyze 
+	The trace \ref{trace2} shows the two events $1\#w(x)_1$ and $2\#w(x)_5$ are now next to each other in the trace, thus they are part of a data race. This also shows that there are data races that can only be detected under a specific schedule. Data race prediction tools use various methods to try to predict such cases.
 	\section{Background}\label{background-sec}
 		\subsection{Dynamic Data Race Prediction}
-		Race prediction can be done static or dynamic. Static race prediction uses static analysis, meaning it tries to find data races before running the code. For more details on static race prediction see \cite{naik}.\\
-		Dynamic data race prediction tools run a program and then try to find data races by reordering the obtained trace. The method of reordering traces to try to predict data races is called dynamic data race prediction, see \cite[p. 2]{sulzmann2}, and will be discussed in this work.\\
-		The approach of finding all possible reorderings is used in exhaustive predictive methods. Since modern programs may utilize multiple threads each executing large blocks of code, finding all possible reorderings might not always be feasible. Therefore effective predictive methods are employed which compromise \textit{completeness} and \textit{soundness} for better coverage. FastTrack and TSan are examples for dynamic data race prediction using effective predictive methods.\\
+		Race prediction can be done statically or dynamically. Static race prediction uses static analysis, meaning it tries to find data races before running the code. For more details on static race prediction see \cite{naik}.\\
+		Dynamic data race prediction tools run a program and then, based on the obtained trace, try to predict if there may be a reordered trace that exhibits data races, see \cite[p. 2]{sulzmann2}.\\
+		The approach of finding all possible reorderings is used in exhaustive predictive methods. Since modern programs may utilize multiple threads each executing large, computationally intensive blocks of code, finding all possible reorderings might not always be feasible. Therefore effective predictive methods are employed which compromise \textit{completeness} and \textit{soundness} for better coverage. FastTrack and TSan are examples for dynamic data race prediction using effective predictive methods.\\
 		Sulzmann and Stadtm\"uller \cite[p. 2]{sulzmann} define completeness and soundness as follows:
 		\begin{quote}
 			Sound means that races reported by the algorithm can be observed via some appropriate reordering of the trace. If unsound, we refer to wrongly a classiﬁed race as a \textit{false positive}. Complete means that all valid reorderings that exhibit some race can be predicted by the algorithm. If incomplete, we refer to any not reported race as a \textit{false negative}.
@@ -202,14 +202,13 @@
 			We deﬁne vector clock $V_1$ to be smaller than vector clock $V_2$, written $V_1 < V_2$, if (1) for each thread $i$, $i$'s time stamp in $V_1$ is smaller or equal compared to $i$'s time stamp in $V_2$, and (2) there exists a thread $i$ where $i$'s time stamp in $V_1$ is strictly smaller compared to $i$'s time stamp in $V_2$. [...] For each thread $i$ we maintain a vector clock $Th(i)$. [...]Initially, for each vector clock $Th(i)$ all time stamps are set to 0 but position $i$ where the time stamp is set to 1.
 		\end{quote}
 		Sulzmann and Stadtm\"uller further state that for two events $e$ and $f$ with vector clocks $V_1$ assigned to $e$ and $V_2$ assigned to $f$, if $V_1 < V_2$ then it can be said that $e <^{HB} f$. Further for synchronization the following applies. $V_1 = V_2 \sqcup V_3$ then $V_1 \leq V_2$ and $V_1 \leq V_3$.\\
-		With Lamport's HB relation vector clocks are incremented after processing an event to enforce the program order condition. That results in events having a pre vector clock and a post vector clock. As an example in trace \ref{trace1}, 1\#w(x) will have the pre vector clock $[1,0]$, as we are in the first thread we must initialize set the time stamp at position one to zero, and the post vector clock $[2,0]$. For following events the pre vector clock be the same as the post vector clock of the previous event. So for 2\#acq(y) the pre vector clock will be $[2,0]$ and the post vector clock $[3,0]$. To enforce the critical section order condition the pre vector
-		%%notation of VC, inc, sync...
+		For the cases where neither $V_1 < V_2$ nor $V_2 < V_1$ is true it can be said that $V_1$ and $V_2$ are incomparable \cite[p. 8]{sulzmann2}. The events assigned with $V_1$ and $V_2$ are therefore concurrent. If at least one of the events is a write event, then a data race has been found.\\ 
+		With Lamport's HB relation for events in the same thread $j$ with the respective vector clock $V_n$, the operation $\text{inc}(V_n,j)$ is applied after processing the event. This is to enforce the program order condition. That results in events having a pre vector clock $\text{pre\_}V$ and a post vector clock $\text{post\_}V$. As an example in trace \ref{trace1}, 1\#w(x) will have the pre vector clock $[1,0]$, as we are in the first thread we must initialize set the time stamp at position one to zero. Then $\text{inc}(\text{pre\_}V_1,1)$ is applied so the post vector clock would be $\text{post\_}V_1=[2,0]$. For following events in the same thread the pre vector clock is the same as the post vector clock of the previous event. So for 2\#acq(y) the pre vector clock would be $[2,0]$ and the post vector clock $[3,0]$. To enforce the critical section order condition the pre vector clock of an acquire event following a release event on the same lock has to be synchronized. The post vector clock of the acquire event will be the incremented synchronized vector clock. In trace \ref{trace1} the pre vector clock of 3\#rel(y) is $[3,0]$ and $[0,1]$ for 4\#acq(y). So the synchronized vector clock is $V_2=[3,1]$ and after applying $\text{inc}(V_2,2)$, the vector clock for 4\#acq(y) would be $[3,2]$. For further details on vector clocks, see \cite[p. 8]{sulzmann2}\cite.
 		\subsection{Epoch}
 %		\begin{itemize}
 %			\item was genau ist ein data race
 %			\item wie k\"onnen data races dynamisch erkannt werden?
 %			\item happens-before Methode \cite[p. 4]{FAVA2020102473}
-%			
 %		\end{itemize}
 	
 	\section{FastTrack + TSan}\label{fasttrack-sec}
@@ -231,6 +230,8 @@
 			\label{trace3}
 		\end{center}
 	\end{table}
+	Describe shadow cells and shadow words, then example...
+	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow words}]{shadow_word_limitation.cpp}
 %	\begin{itemize}
 %		\item Effiziente Umsetzung der happens-before methode
 %		\item FastTrack uses an optimized semi-adaptive version of epochs

@@ -2,42 +2,44 @@
 // Created by unknown on 31.05.23.
 //
 
-#include "vector_clock_limitation_example.h"
+#include "thread_count_limitation.h"
 #include "pthread.h"
+#include "iostream"
+using namespace std;
 
 int var1;
-int var2;
-int threadCount = 258;
-
+int threadCount = 18;
 pthread_mutex_t m;
 
 void *Thread1(void *x) {
     // w(x)1
     var1++;
+    pthread_mutex_lock(&m);
+    pthread_mutex_unlock(&m);
     return NULL;
 }
 
 void *ThreadN(void *x) {
     // w(x)n
-    if (var2 == 1) {}
-    for (int i = 0; i<10000*10000; i++) {
-    }
+    pthread_mutex_lock(&m);
+    pthread_mutex_unlock(&m);
+    cout<<var1;
     return NULL;
 }
 
-void *Thread257(void *x) {
+void *Thread18(void *x) {
     // w(x)257
     var1--;
     return NULL;
 }
 
-void vector_clock_limitation_example::run() {
+void thread_count_limitation::run() {
     pthread_t t[threadCount];
     for (int i = 0; i < threadCount; i++) {
         if (i == 0) {
             pthread_create(&t[i], NULL, Thread1, NULL);
         } else if (i == threadCount - 1) {
-            pthread_create(&t[i], NULL, Thread257, NULL);
+            pthread_create(&t[i], NULL, Thread18, NULL);
         } else {
             pthread_create(&t[i], NULL, ThreadN, NULL);
         }

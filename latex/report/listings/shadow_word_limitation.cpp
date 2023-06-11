@@ -1,8 +1,3 @@
-//
-// Created by unknown on 31.05.23.
-//
-
-#include "shadow_word_limitation.h"
 #include "pthread.h"
 #include "iostream"
 using namespace std;
@@ -12,32 +7,36 @@ int threadcount = 6;
 pthread_mutex_t m;
 
 void *Thread1(void *x) {
-    // acq(y)1
-    // w(x)2
+    // w(x)
     var1=1;
+    // acq(y)
     pthread_mutex_lock(&m);
-    // rel(y)3
+    // rel(y)
     pthread_mutex_unlock(&m);
     return NULL;
 }
 
 void *ThreadN(void *x) {
-    // acq(x)
+    // acq(y)
     pthread_mutex_lock(&m);
+    // rel(y)
     pthread_mutex_unlock(&m);
-    // r(x)n
+    // r(x)
     cout<<var1;
     return NULL;
 }
 
 void *Thread6(void *x) {
+    // acq(y)
     pthread_mutex_lock(&m);
+    // rel(y)
     pthread_mutex_unlock(&m);
+    // w(x)
     var1=1;
     return NULL;
 }
 
-void shadow_word_limitation::run() {
+int main() {
     pthread_t t[threadcount];
     for (int i = 0; i < threadcount; i++) {
         if (i == 0) {
