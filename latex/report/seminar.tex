@@ -199,12 +199,12 @@
 		As vector clocks record the time stamps for all $n$ threads they need $O(n)$ space while epochs need $O(1)$ space. However '[m]aintaining a growing and shrinking set of epochs can be costly. This applies for cases where many elements are added but also removed.'\cite[p. 10]{sulzmann2}. Instead adaptive approaches can be utilized which makes switching between epochs and vector clocks depending on the situation is possible.
 		
 	\section{FastTrack and TSan}\label{fasttrack-sec}
-	From \cite{lin}: 'ThreadSanitizer (Tsan)2 is a runtime data race detector developed by Google. ThreadSanitizer is now part of the LLVM and GCC compilers to enable data race detection for C++ and Go code.'\\
-	ThreadSanitizer uses a modified version of the FastTrack algorithm which is epoch-based and used for dynamic race prediction.\\
+	From \cite[p. 183]{lin}: 'ThreadSanitizer (Tsan)2 is a runtime data race detector developed by Google. ThreadSanitizer is now part of the LLVM and GCC compilers to enable data race detection for C++ and Go code.'\\
+	TSan uses a modified version of the FastTrack algorithm which is epoch-based and used for dynamic race prediction. Compared to FastTrack TSan uses shadow memory \cite[p. 183]{lin}\cite[p. 4]{yu}\\
 	FastTrack and TSan both implement a semi-adaptive approach for storing information \cite[p. 10]{sulzmann2}. That means initially only epochs are used. Once a read event on a variable $x$ is recorded, the epoch is switched to a vector clock and the vector clock is maintained for subsequent reads on the variable $x$. The assumption is that concurrent reads are very frequent. Write events are always represented as epochs under the assumption that all writes are totally ordered.\\
 	shadows cells and shadow states/words...
-	\subsection{Limitations of FastTrack and TSan}
-	While FastTrack and TSan are sound, at least for the first found race (as explained in the following chapter), they are both incomplete, as the example in chapter \ref{intro} shows. Analyzing the exact program \ref{lst:conflicting} using TSan, it reports that no race is found, while the program does contain a data race as the reordered trace \ref{trace2} shows. However switching lines 28 and 29 in program \ref{lst:conflicting} to more closely represent trace \ref{trace2} is sufficient for TSan to correctly detect the data race.\\
+	\subsection{Limitations in completeness}
+	While FastTrack and TSan are sound, at least for the first found race (as explained in the following chapter), they are both incomplete, as the example in chapter \ref{intro} shows. Analyzing the exact program \ref{lst:conflicting} using TSan, it reports that no race is found, while the program does contain a data race as the reordered trace \ref{trace2} shows. However switching lines 28 and 29 in program \ref{lst:conflicting} to more closely represent trace \ref{trace2} is sufficient for TSan to correctly detect the data race after running it again on the modified program.\\
 	The assumption that all writes are totally ordered is not always the case as the following example \ref{lst:incomplete}, taken from \cite[p. 10]{sulzmann2}, shows.\\
 	\begin{minipage}{\linewidth}
 		\lstinputlisting[caption={Program demonstrating the incompleteness of TSan}, label={lst:incomplete}, language=C++]{incomplete.cpp}
@@ -229,7 +229,8 @@
 		\item $V_2(2\#w(x)_2) = [0,1]$
 		\item $V_3(2\#w(x)_3) = [0,2]$
 	\end{itemize}
-	From this we can see that event $1\#w(x)_1$ is in a data race with both the events $2\#w(x)_2$ and $2\#w(x)_3$. However TSan only reports the first race with the event $2\#w(x)_2$.\\
+	From this we can see that event $1\#w(x)_1$ is in a data race with both the events $2\#w(x)_2$ and $2\#w(x)_3$. However TSan only reports the first race with the event $2\#w(x)_2$.
+	\subsection{Limitations in soundness}
 	Furthermore, as seen in \cite[p. 2]{marthur}, even though Lamport's happens-before relation is sound for the first detected data race, it may produce false positives. Because FastTrack and TSan both use the HB relation they may also produce false positives as a result. The following program \ref{lst:unsound} shows an example in which TSan produces a false positive.
 	\lstinputlisting[caption={Program demonstrating the unsoundness of TSan}, label={lst:unsound}, language=C++]{unsoundness.cpp}
 	The program \ref{lst:unsound} produces the following trace \ref{trace3}:
@@ -248,13 +249,17 @@
 		\end{center}
 	\end{table}
 	
-	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow words}]{shadow_word_limitation.cpp}
+	\subsection{Shadow word length limit}
+	
+	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow word length}]{shadow_word_limitation.cpp}
+	
+	\subsection{Thread count}
 	ThreadSanitizer fails to show stack trace for data races that are at least 16 threads apart from each other
 	\lstinputlisting[caption={Program showing thread count limitation}]{thread_count_limitation.cpp}
 	
 	
 	\section{Conclusion}
-	After analyzing the FastTrack and TSan algorithms it can be concluded that there are neither algorithm is entirely sound nor complete. Both have limitations that make them unable to detect data races in certain situations. However as of this moment there are no scalable data race prediction tools that are completely sound and complete. Keeping that in mind both of these tools produce good results with good performance in regards to memory and time consumption in comparison to other tools as \cite{flanagan} shows.
+	After analyzing the FastTrack and TSan algorithms it can be concluded that there are neither algorithm is entirely sound nor complete. Both have limitations that make them unable to detect data races in certain situations. However as of this moment there are no scalable data race prediction tools that are completely sound and complete. Keeping that in mind both of these tools produce good results with good performance in regards to memory and time consumption in comparison to other tools as \cite{flanagan}\cite{wilcox} show.
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| BIBLIOGRAPHY |%%                 
 	\newpage                                          
