@@ -193,3 +193,44 @@
 	abstract="An analysis tool's usefulness depends on whether its runtime and memory consumption remain within reasonable bounds for a given program. In this paper we present an evaluation of the memory consumption and runtime of four data race detection tools: Archer, ThreadSanitizer, Helgrind, and Intel Inspector, using DataRaceBench version 1.1.1 using 79 microbenchmarks. Our evaluation consists of four different analyses: (1) runtime and memory consumption of the four data race detection tools using all DataRaceBench microbenchmarks, (2) comparison of the analysis techniques implemented in the evaluated tools, (3) for selected benchmarks an in-depth analysis of runtime behavior with CPU profiler and the identified differences, (4) data analysis to investigate correlations within collected data. We also show the effectiveness of the tools using three quantitative metrics: precision, recall, and accuracy.",
 	isbn="978-3-030-03421-4"
 }
+
+@article{10.1145/3093333.3009857,
+	author = {Lidbury, Christopher and Donaldson, Alastair F.},
+	title = {Dynamic Race Detection for C++11},
+	year = {2017},
+	issue_date = {January 2017},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {52},
+	number = {1},
+	issn = {0362-1340},
+	url = {https://doi.org/10.1145/3093333.3009857},
+	doi = {10.1145/3093333.3009857},
+	abstract = {The intricate rules for memory ordering and synchronisation associated with the C/C++11 memory model mean that data races can be difficult to eliminate from concurrent programs. Dynamic data race analysis can pinpoint races in large and complex applications, but the state-of-the-art ThreadSanitizer (tsan) tool for C/C++ considers only sequentially consistent program executions, and does not correctly model synchronisation between C/C++11 atomic operations. We present a scalable dynamic data race analysis for C/C++11 that correctly captures C/C++11 synchronisation, and uses instrumentation to support exploration of a class of non sequentially consistent executions. We concisely define the memory model fragment captured by our instrumentation via a restricted axiomatic semantics, and show that the axiomatic semantics permits exactly those executions explored by our instrumentation. We have implemented our analysis in tsan, and evaluate its effectiveness on benchmark programs, enabling a comparison with the CDSChecker tool, and on two large and highly concurrent applications: the Firefox and Chromium web browsers. Our results show that our method can detect races that are beyond the scope of the original tsan tool, and that the overhead associated with applying our enhanced instrumentation to large applications is tolerable.},
+	journal = {SIGPLAN Not.},
+	month = {jan},
+	pages = {443–457},
+	numpages = {15},
+	keywords = {C++11, data races, memory models, concurrency}
+}
+
+
+
+@inproceedings{lidbury,
+	author = {Lidbury, Christopher and Donaldson, Alastair F.},
+	title = {{Dynamic Race Detection for C++11}},
+	year = {2017},
+	isbn = {9781450346603},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/3009837.3009857},
+	doi = {10.1145/3009837.3009857},
+	abstract = {The intricate rules for memory ordering and synchronisation associated with the C/C++11 memory model mean that data races can be difficult to eliminate from concurrent programs. Dynamic data race analysis can pinpoint races in large and complex applications, but the state-of-the-art ThreadSanitizer (tsan) tool for C/C++ considers only sequentially consistent program executions, and does not correctly model synchronisation between C/C++11 atomic operations. We present a scalable dynamic data race analysis for C/C++11 that correctly captures C/C++11 synchronisation, and uses instrumentation to support exploration of a class of non sequentially consistent executions. We concisely define the memory model fragment captured by our instrumentation via a restricted axiomatic semantics, and show that the axiomatic semantics permits exactly those executions explored by our instrumentation. We have implemented our analysis in tsan, and evaluate its effectiveness on benchmark programs, enabling a comparison with the CDSChecker tool, and on two large and highly concurrent applications: the Firefox and Chromium web browsers. Our results show that our method can detect races that are beyond the scope of the original tsan tool, and that the overhead associated with applying our enhanced instrumentation to large applications is tolerable.},
+	booktitle = {Proceedings of the 44th ACM SIGPLAN Symposium on Principles of Programming Languages},
+	pages = {443–457},
+	numpages = {15},
+	keywords = {data races, C++11, memory models, concurrency},
+	location = {Paris, France},
+	series = {POPL '17}
+}
+

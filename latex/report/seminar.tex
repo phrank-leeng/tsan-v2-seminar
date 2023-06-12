@@ -115,7 +115,7 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%| WRITE TEXT HERE |%%
 	\section{Introduction}\label{intro}
-	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-1830643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This will be elaborated in the following section. We specifically look at the dynamic data race prediction algorithms of FastTrack and ThreadSanitizer (TSan) V2. TSan V2 uses a slightly modified version of the FastTrack algorithm and differentiates itself from the first version by utilizing happens-before methods instead of the lockset method.\\
+	Nowadays concurrent programs are very common in order to make use of 'hyper-threading and multi-core architectures'\cite[p. 14]{SWB-0643851}. 'Due to the highly non-deterministic behavior of concurrent programs' \cite[p. 1]{sulzmann} data races may arise but can also be hard to find, as they also 'may only arise under a specific schedule' \cite[p. 1]{sulzmann}. This will be elaborated in the following section. We specifically look at the dynamic data race prediction algorithms of FastTrack and ThreadSanitizer (TSan) V2. TSan V2 uses a slightly modified version of the FastTrack algorithm and differentiates itself from the first version by utilizing happens-before methods instead of the lockset method.\\
 	Firstly the motivation and background for dynamic data race prediction tools will be shown. Then the FastTrack and TSan algorithms will be demonstrated along with examples showing the limitations of FastTrack and TSan. In the following the same
 
 	\section{Motivation and Examples}
@@ -134,7 +134,7 @@
 				5. & & w(x) \\
 				6. & & rel(y) \\
 			\end{tabular}
-			\caption{Possible trace of listing \ref{lst:conflicting}}
+			\caption{Obtained trace of listing \ref{lst:conflicting}}
 			\label{trace1}
 		\end{center}
 	\end{table}
@@ -202,7 +202,11 @@
 	From \cite[p. 183]{lin}: 'ThreadSanitizer (Tsan)2 is a runtime data race detector developed by Google. ThreadSanitizer is now part of the LLVM and GCC compilers to enable data race detection for C++ and Go code.'\\
 	TSan uses a modified version of the FastTrack algorithm which is epoch-based and used for dynamic race prediction. Compared to FastTrack TSan uses shadow memory \cite[p. 183]{lin}\cite[p. 4]{yu}\\
 	FastTrack and TSan both implement a semi-adaptive approach for storing information \cite[p. 10]{sulzmann2}. That means initially only epochs are used. Once a read event on a variable $x$ is recorded, the epoch is switched to a vector clock and the vector clock is maintained for subsequent reads on the variable $x$. The assumption is that concurrent reads are very frequent. Write events are always represented as epochs under the assumption that all writes are totally ordered.\\
-	shadows cells and shadow states/words...
+	TSan also uses shadow memory 'to keep track of accesses to all [memory] location[s].'\cite[p. 4]{lidbury}. The memory location $x$ is the location of the space where the variable $x$ is stored. Lidbury further states:
+	\begin{quote}
+		This [shadow memory] will store up to four shadow words per location. For a given location this allows tsan to detect data races involving one of up to four previous accesses to the location. On each access to the location, all the shadow words are checked for race conditions, after which details of the current access are tracked using a shadow word, with a previous access being evicted pseudo-randomly if four accesses are already being tracked. Older accesses have a higher probability of being evicted. As only four of the accesses are stored, there is a chance for false negatives, as shadow words that could still be used can be evicted.
+	\end{quote}
+	The resulting limitation will be demonstrated in chapter \ref{shadow}.
 	\subsection{Limitations in completeness}
 	While FastTrack and TSan are sound, at least for the first found race (as explained in the following chapter), they are both incomplete, as the example in chapter \ref{intro} shows. Analyzing the exact program \ref{lst:conflicting} using TSan, it reports that no race is found, while the program does contain a data race as the reordered trace \ref{trace2} shows. However switching lines 28 and 29 in program \ref{lst:conflicting} to more closely represent trace \ref{trace2} is sufficient for TSan to correctly detect the data race after running it again on the modified program.\\
 	The assumption that all writes are totally ordered is not always the case as the following example \ref{lst:incomplete}, taken from \cite[p. 10]{sulzmann2}, shows.\\
@@ -244,20 +248,46 @@
 				3. & & r(y) \\
 				4. & & w(x) \\
 			\end{tabular}
-			\caption{Possible trace of listing \ref{lst:unsound}}
+			\caption{Obtained trace of listing \ref{lst:unsound}}
 			\label{trace3}
 		\end{center}
 	\end{table}
-	
-	\subsection{Shadow word length limit}
-	
+	From the trace \ref{trace3} it is apparent that $1\#w(y)_2$ and $2\#r(y)_3$ are in a data race. A look at the resulting vector clocks for $1\#r(x)_1$ and $2\#w(x)_4$ shows that both events are unordered and thus also in a data race according to the HB relation. However a valid reordering of trace \ref{trace3} does not exist where $1\#r(x)_1$ and $2\#w(x)_4$ appear next to each other. Therefore the reported data race is a false positive.
+	\subsection{Shadow word length limit}\label{shadow}
+	As TSan has a limit on how many shadow words per memory location is stored, the following program \ref{lst:shadow} will highlight how data races may be missed due to this limit.
 	\lstinputlisting[caption={Program showing a missed data race due to the limit on shadow word length}, label={lst:shadow}, language=C++]{shadow_word_limitation.cpp}
-	
+	The acquire and release operations in lines 11, 12, 17 and 18 are required to ensure that the first write event and subsequent read events are not in a data race. The read events however are still concurrent as they cannot be ordered under the HB relation. The lines 24 and 25 exist to prevent TSan from detecting a data race between the first write event and the last one.\\
+	This can be observed in the following trace which can be obtained from the program \ref{lst:shadow}:
+	\begin{table}[H]
+		\begin{center}
+			\begin{tabular}{ c c c c c c c }
+				& 1\# & 2\# & 3\# & 4\# & 5\# & 6\# \\
+				\hline
+				1. & w(x) & & & & & \\
+				2. & acq(y) & & & & & \\
+				3. & rel(y) & & & & & \\
+				4. & & acq(y) & & & & \\
+				5. & & rel(y) & & & & \\
+				6. & & r(x) & & & & \\
+				\vdots & & & & & & \\
+				16. & & & & & & acq(y) \\
+				17. & & & & & & rel(y) \\
+				18. & & & & & & w(x) \\
+			\end{tabular}
+			\caption{Obtained trace of listing \ref{lst:shadow}}
+			\label{trace3}
+		\end{center}
+	\end{table}
+	TSan will report a data race on the events $5\#$ and $6\#$ instead of $2\#$ which means that the first data race was missed.
 	\subsection{Thread count}
-	ThreadSanitizer fails to show stack trace for data races that are at least 16 threads apart from each other
+	TSan fails to show stack trace for data races that are at least 16 threads apart from each other
 	\lstinputlisting[caption={Program showing thread count limitation}, label={lst:threadcount}, language=C++]{thread_count_limitation.cpp}
-	
-	
+	This program starts thread 1 with a write event and 16 threads with non-conflicting read events in between another write event. The two write events are in a data race as the are no lock events for the last write event. TSan will detect the data race but will show the following message for the last thread:
+	\begin{lstlisting}
+  Previous write of size 4 at 0x564180a42160 by thread T1:
+    [failed to restore the stack]
+	\end{lstlisting}
+	If the variable \texttt{threadCount} is set to a value greater than 18 TSan will print the same message. Once it is set to a value less than 18, TSan will print the correct stack trace.
 	\section{Conclusion}
 	After analyzing the FastTrack and TSan algorithms it can be concluded that there are neither algorithm is entirely sound nor complete. Both have limitations that make them unable to detect data races in certain situations. However as of this moment there are no scalable data race prediction tools that are completely sound and complete. Keeping that in mind both of these tools produce good results with good performance in regards to memory and time consumption in comparison to other tools as \cite{flanagan}\cite{wilcox} show.
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
