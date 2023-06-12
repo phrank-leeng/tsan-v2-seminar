@@ -278,7 +278,7 @@
 			\label{trace3}
 		\end{center}
 	\end{table}
-	TSan will report a data race on the events $5\#$ and $6\#$ instead of $2\#$ which means that the first data race was missed.
+	TSan will report a data race on the events $5\#$ and $6\#$ instead of $2\#$ which means that the first data race was missed. If the variable \texttt{threadcount} is set to 5, then TSan will report the first data race which then will be between thread $2\#$ and $5\#$.
 	\subsection{Thread count}
 	TSan fails to show stack trace for data races that are at least 16 threads apart from each other
 	\lstinputlisting[caption={Program showing thread count limitation}, label={lst:threadcount}, language=C++]{thread_count_limitation.cpp}

@@ -8,7 +8,7 @@
 using namespace std;
 
 int var1;
-int threadcount = 6;
+int threadcount = 5;
 pthread_mutex_t m;
 
 void *Thread1(void *x) {
@@ -42,7 +42,7 @@ void shadow_word_limitation::run() {
     for (int i = 0; i < threadcount; i++) {
         if (i == 0) {
             pthread_create(&t[i], NULL, Thread1, NULL);
-        } else if (i == threadcount) {
+        } else if (i == threadcount - 1) {
             pthread_create(&t[i], NULL, Thread6, NULL);
         } else {
             pthread_create(&t[i], NULL, ThreadN, NULL);

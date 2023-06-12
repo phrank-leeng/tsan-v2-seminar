@@ -10,5 +10,5 @@
 #include "shadow_word_limitation.h"
 
 int main() {
-    thread_count_limitation::run();
+    shadow_word_limitation::run();
 }

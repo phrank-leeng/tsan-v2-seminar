@@ -46,7 +46,6 @@
 					\item What are data races?
 					\item Why fix data races?
 					\item How to detect data races?
-					\item show code snippets and corresponding traces
 				\end{itemize}
 			\end{column}
 			\begin{column}{0.5\textwidth}
@@ -54,31 +53,26 @@
 				\begin{figure}
 					\includegraphics[scale=0.28]{example-image}
 				\end{figure}
-				$\big\Downarrow$
-				\begin{figure}
-					\includegraphics[scale=0.25]{pics/packing.png}
-					\newline
-					\tiny Output: Packing
-				\end{figure}
 			\end{column}
 		\end{columns}
 	}
 
+	\section{Background}
 	\frame{
-		\frametitle{Happens-before relation}
+		\frametitle{Background}
 		\begin{columns}
 			\begin{column}{0.5\textwidth}
 				\begin{itemize}
+					\item dynamic data race prediction
+					\item vector clocks
+					\item epochs
 					\item Lamport's HB relation
 				\end{itemize}
 			\end{column}
 			\begin{column}{0.5\textwidth}
 				\centering
 				\begin{figure}
-					\includegraphics[scale=0.12]{pics/Screenshot_20221115_151950.png}
-				\end{figure}
-				\begin{figure}
-					\includegraphics[scale=0.12]{pics/Screenshot_20221115_152310.png}
+					\includegraphics[scale=0.12]{example-image}
 				\end{figure}
 			\end{column}
 		\end{columns}

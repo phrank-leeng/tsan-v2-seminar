@@ -32,7 +32,7 @@ int main() {
     for (int i = 0; i < threadcount; i++) {
         if (i == 0) {
             pthread_create(&t[i], NULL, Thread1, NULL);
-        } else if (i == threadcount) {
+        } else if (i == threadcount - 1) {
             pthread_create(&t[i], NULL, Thread6, NULL);
         } else {
             pthread_create(&t[i], NULL, ThreadN, NULL);
