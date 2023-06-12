@@ -1,0 +1,43 @@
+\frametitle{Background}
+			\begin{columns}
+				\begin{column}{0.6\textwidth}
+				\begin{lstlisting}[caption={program exhibiting a data race},language=C++]
+int x;
+pthread_mutex_t y;
+
+void *Thread1(void *x) {
+	x++;
+	pthread_mutex_lock(&y);
+	pthread_mutex_unlock(&y);
+	return NULL;
+}
+
+void *Thread2(void *x) {
+	pthread_mutex_lock(&y);
+	x--;
+	pthread_mutex_unlock(&y);
+	return NULL;
+}
+				\end{lstlisting}
+				\end{column}
+				\pause
+				\begin{column}{0.4\textwidth}
+					\begin{table}
+						\begin{center}
+							\begin{tabular}{ c c c}
+								& 1\# & 2\# \\
+								\hline
+								1. & w(x) & \\
+								2. & acq(y) & \\
+								3. & rel(y) & \\
+								4. & & acq(y) \\
+								5. & & w(x) \\
+								6. & & rel(y) \\
+							\end{tabular}
+						\caption{obtained trace}
+						\label{trace1}
+						\end{center}
+					\end{table}
+				\end{column}
+			\end{columns}
+			

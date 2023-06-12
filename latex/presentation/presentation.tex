@@ -12,9 +12,31 @@
 \setbeamertemplate{frametitle}{\vspace{0.9em}\textbf{\insertframetitle}}
 
 \usepackage[T1]{fontenc}
-\usepackage[ngerman]{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{eso-pic}
+\usepackage{caption}
+
+\usepackage{listings}
+\lstdefinestyle{customc}{
+	belowcaptionskip=1\baselineskip,
+	breaklines=true,
+	numbers=left,
+	columns=flexible,
+	xleftmargin=2em,
+	xrightmargin=1em,
+	firstnumber=1,
+	numberfirstline,
+	numberstyle=\tiny\sffamily,
+	numbersep=6pt,
+	basicstyle=\footnotesize\ttfamily,
+	keywordstyle=\bfseries\color{green!40!black},
+	commentstyle=\itshape\color{purple!40!black},
+	identifierstyle=\color{blue},
+	backgroundcolor=\color{gray!10!white},
+}
+\lstset{style=customc}
+\lstset{captionpos=b}
 
 \title[PA2]{\textbf{Seminararbeit}}
 \subtitle{Dynamische Programmanalysen für nebenläufige Programme - Data Race Prediction mit TSan}
@@ -51,42 +73,128 @@
 			\begin{column}{0.5\textwidth}
 				\centering
 				\begin{figure}
-					\includegraphics[scale=0.28]{example-image}
+					\hspace{-2em}
+					\includegraphics[scale=0.6]{pics/data-race.pdf}
+					\caption*{\tiny Source: \url{https://programming.guide/go/data-races-explained.html}}
 				\end{figure}
 			\end{column}
 		\end{columns}
 	}
 
 	\section{Background}
+		\begin{frame}[fragile]
+			\frametitle{Background}
+			\begin{columns}
+				\begin{column}{0.6\textwidth}
+				\begin{lstlisting}[caption={program exhibiting a data race},language=C++]
+int x;
+pthread_mutex_t y;
+
+void *Thread1(void *x) {
+	x++;
+	pthread_mutex_lock(&y);
+	pthread_mutex_unlock(&y);
+	return NULL;
+}
+
+void *Thread2(void *x) {
+	pthread_mutex_lock(&y);
+	x--;
+	pthread_mutex_unlock(&y);
+	return NULL;
+}
+				\end{lstlisting}
+				\end{column}
+				\pause
+				\begin{column}{0.4\textwidth}
+					\begin{table}
+						\begin{center}
+							\begin{tabular}{ c c c}
+								& 1\# & 2\# \\
+								\hline
+								1. & w(x) & \\
+								2. & acq(y) & \\
+								3. & rel(y) & \\
+								4. & & acq(y) \\
+								5. & & w(x) \\
+								6. & & rel(y) \\
+							\end{tabular}
+						\caption{obtained trace}
+						\label{trace1}
+						\end{center}
+					\end{table}
+				\end{column}
+			\end{columns}
+			
+		\end{frame}
+	
+	\frame{
+		\begin{columns}
+			\begin{column}{0.6\textwidth}
+				\Large\hspace{5em}Data race! \hspace{2em}$\Leftarrow$
+			\end{column}
+			\begin{column}{0.4\textwidth}
+				\begin{table}
+					\begin{center}
+						\begin{tabular}{ c c c}
+							& 1\# & 2\# \\
+							\hline
+							4. & & acq(y) \\
+							5. & & w(x) \\
+							1. & w(x) & \\
+							6. &  & rel(y) \\
+							2. & acq(y) & \\
+							3. & rel(y) & \\
+						\end{tabular}
+						\caption{Trace \ref{trace1} reordered}
+						\label{trace2}
+					\end{center}
+				\end{table}
+			\end{column}
+		\end{columns}
+		
+	}
+		
+	
 	\frame{
 		\frametitle{Background}
+			\begin{itemize}
+				\item dynamic data race prediction
+				\item vector clocks
+				\item epochs
+				\item Lamport's HB relation
+			\end{itemize}
+	}
+
+	
+	\section{FastTrack and TSan V2}
+	\frame{
+		\frametitle{FastTrack and TSan V2}
 		\begin{columns}
 			\begin{column}{0.5\textwidth}
+				\hspace{2em}FastTrack
 				\begin{itemize}
-					\item dynamic data race prediction
-					\item vector clocks
-					\item epochs
-					\item Lamport's HB relation
+					\item epoch-based
+					\item semi-adaptive
 				\end{itemize}
 			\end{column}
 			\begin{column}{0.5\textwidth}
 				\centering
-				\begin{figure}
-					\includegraphics[scale=0.12]{example-image}
-				\end{figure}
+				ThreadSanitizer (TSan) V2
+				\begin{itemize}
+					\item modified version of FastTrack
+					\item shadow memory
+				\end{itemize}
 			\end{column}
 		\end{columns}
+		
 	}
 	
-	\section{FastTrack}
+	\subsection{Limitations}
 	\frame{
-		\frametitle{FastTrack}
+		\frametitle{Limitations}
 	}
-	
-	\section{TSan}
-	\frame{
-		\frametitle{TSan V2}
-	}
+
 	
 	\section{Conclusion}
 	\frame{
