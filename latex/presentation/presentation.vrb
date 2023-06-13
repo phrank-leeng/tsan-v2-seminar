@@ -1,43 +1,36 @@
-\frametitle{Background}
-			\begin{columns}
-				\begin{column}{0.6\textwidth}
-				\begin{lstlisting}[caption={program exhibiting a data race},language=C++]
-int x;
-pthread_mutex_t y;
-
-void *Thread1(void *x) {
-	x++;
-	pthread_mutex_lock(&y);
-	pthread_mutex_unlock(&y);
-	return NULL;
+\frametitle{Limitations}
+		\begin{columns}
+			\begin{column}{0.5\textwidth}
+			\begin{itemize}
+				\item Unsound due to epochs
+			\end{itemize}
+			\begin{lstlisting}[caption={program showing unordered writes}]
+void thread1() {
+	y := x+5;
 }
 
-void *Thread2(void *x) {
-	pthread_mutex_lock(&y);
-	x--;
-	pthread_mutex_unlock(&y);
-	return NULL;
+void thread2() {
+	if (y == 5)
+		x := 10;
+	else
+		while(true);
 }
-				\end{lstlisting}
-				\end{column}
-				\pause
-				\begin{column}{0.4\textwidth}
-					\begin{table}
-						\begin{center}
-							\begin{tabular}{ c c c}
-								& 1\# & 2\# \\
-								\hline
-								1. & w(x) & \\
-								2. & acq(y) & \\
-								3. & rel(y) & \\
-								4. & & acq(y) \\
-								5. & & w(x) \\
-								6. & & rel(y) \\
-							\end{tabular}
-						\caption{obtained trace}
-						\label{trace1}
-						\end{center}
-					\end{table}
-				\end{column}
-			\end{columns}
-			
+			\end{lstlisting}	
+			\end{column}
+		\hspace{1em}
+		\begin{column}{0.5\textwidth}
+			\begin{table}
+				\begin{center}
+					\begin{tabular}{ c c c}
+						& 1\# & 2\# \\
+						\hline
+						1. & r(x) & \\
+						2. & w(y) & \\
+						3. & & r(y) \\
+						4. & & w(x) \\
+					\end{tabular}
+					\caption{Obtained trace}
+				\end{center}
+			\end{table}
+		\end{column}
+		\end{columns}
